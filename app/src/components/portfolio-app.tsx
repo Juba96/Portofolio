@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useAnimationControls } from "motion/react";
 import SmokeyCursor from "./lightswind/smokey-cursor";
 import { Iphone16Pro } from "./lightswind/iphone16-pro";
 import { FluidActionPanel } from "./lightswind/fluid-action-panel";
@@ -544,6 +544,24 @@ function ProjectsView() {
   const goTo = (dir: number) =>
     setActive((a) => (a + dir + projects.length) % projects.length);
 
+  // Slide/rotate pulse on the persistent phone when the active app changes.
+  const phoneControls = useAnimationControls();
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      phoneControls.set({ opacity: 0, x: 40, rotate: 5 });
+    } else {
+      phoneControls.set({ opacity: 0.35, x: 40, rotate: 5 });
+    }
+    phoneControls.start({
+      opacity: 1,
+      x: 0,
+      rotate: 0,
+      transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+    });
+  }, [active, phoneControls]);
+
   // Warm every screen the moment Projects opens — switching apps or cycling
   // should never wait on the network.
   useEffect(() => {
@@ -577,40 +595,37 @@ function ProjectsView() {
       </motion.h2>
 
       <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12">
-        {/* The phone — swaps between apps with motion */}
+        {/* The phone. ONE persistent mount — remounting the SVG per switch
+            made Safari blank the whole layer (white flash) while the screen
+            image decoded. The switch animation runs on this wrapper instead,
+            and only the image href swaps. */}
         <div className="w-[132px] md:w-[150px] shrink-0">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={p.title}
-              initial={{ opacity: 0, x: 70, rotate: 8, scale: 0.92 }}
-              animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -70, rotate: -8, scale: 0.92 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              // Native-feel swipe between apps; vertical panning stays free
-              // for page scroll.
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.25}
-              onDragEnd={(_, info) => {
-                if (info.offset.x < -60) goTo(1);
-                else if (info.offset.x > 60) goTo(-1);
-              }}
-              style={{ touchAction: "pan-y" }}
-            >
-              <Iphone16Pro
-                src={p.screens[screenIdx]}
-                contentInsetTop={p.screenInsetTop ?? 0}
-                screenBackground={p.screenInsetTop ? "#ffffff" : "#0a0a0a"}
-                showIsland={p.frameIsland ?? true}
-                showCamera={p.frameIsland ?? true}
-                frameColor="#1c1c1e"
-                bezelColor="#000000"
-                shadow
-                rounded
-                className="w-full h-auto drop-shadow-2xl"
-              />
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            animate={phoneControls}
+            // Native-feel swipe between apps; vertical panning stays free
+            // for page scroll.
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.25}
+            onDragEnd={(_, info) => {
+              if (info.offset.x < -60) goTo(1);
+              else if (info.offset.x > 60) goTo(-1);
+            }}
+            style={{ touchAction: "pan-y" }}
+          >
+            <Iphone16Pro
+              src={p.screens[screenIdx]}
+              contentInsetTop={p.screenInsetTop ?? 0}
+              screenBackground={p.screenInsetTop ? "#ffffff" : "#0a0a0a"}
+              showIsland={p.frameIsland ?? true}
+              showCamera={p.frameIsland ?? true}
+              frameColor="#1c1c1e"
+              bezelColor="#000000"
+              shadow
+              rounded
+              className="w-full h-auto drop-shadow-2xl"
+            />
+          </motion.div>
         </div>
 
         {/* Project info — animates alongside the phone */}
