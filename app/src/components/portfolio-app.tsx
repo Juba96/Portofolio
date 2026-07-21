@@ -341,7 +341,7 @@ export function PortfolioApp() {
       {/* Bottom section */}
       <footer className="relative z-20 px-3 md:px-10 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-6 pt-1 md:pt-2">
         {/* Toggle / back button */}
-        <div className="flex items-center justify-center mb-2">
+        <div className="flex items-center justify-center mb-3">
           {showChat ? (
             <button
               onClick={() => { setShowChat(false); setMessages([]); }}
@@ -378,7 +378,7 @@ export function PortfolioApp() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className="flex flex-wrap justify-center gap-1.5 md:gap-2 mb-2 md:mb-3"
+              className="flex flex-wrap justify-center gap-2 mb-3 max-w-md mx-auto"
             >
               {suggestedQuestions.map((q, i) => (
                 <motion.button
@@ -402,9 +402,9 @@ export function PortfolioApp() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="flex justify-center mb-2 md:mb-3"
+            className="flex justify-center mb-3"
           >
-            <div className="flex items-stretch gap-1.5 md:gap-3">
+            <div className="grid grid-cols-5 gap-2 w-full max-w-[360px] md:w-auto md:max-w-none md:flex md:items-stretch md:gap-3">
               {navItems.map((item, i) => (
                 <motion.button
                   key={item.id}
@@ -414,12 +414,12 @@ export function PortfolioApp() {
                   onClick={() => handleNavClick(item.id)}
                   whileHover={{ y: -3, scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
-                  className={`nav-card liquid-glass flex flex-col items-center justify-center gap-1 w-14 h-14 sm:w-16 sm:h-16 md:w-[72px] md:h-[72px] lg:w-20 lg:h-20 rounded-xl md:rounded-[16px] transition-all duration-300 ease-out ${
+                  className={`nav-card liquid-glass flex flex-col items-center justify-center gap-1 w-full aspect-square md:aspect-auto md:w-[72px] md:h-[72px] lg:w-20 lg:h-20 rounded-xl md:rounded-[16px] transition-all duration-300 ease-out ${
                     view === item.id ? "liquid-glass-active nav-card-active" : ""
                   }`}
                 >
                   <NavIcon view={item.id} color={item.iconColor} />
-                  <span className="text-[9px] sm:text-[10px] md:text-[11px] font-medium text-gray-600">
+                  <span className="text-[10px] md:text-[11px] font-medium text-gray-600">
                     {item.label}
                   </span>
                 </motion.button>
@@ -458,7 +458,7 @@ export function PortfolioApp() {
           </div>
         </motion.form>
 
-        <p className="text-center text-[8px] md:text-[9px] text-gray-400 mt-2 tracking-wider uppercase">
+        <p className="text-center text-[9px] text-gray-400 mt-3 tracking-wider uppercase">
           Powered by AI
         </p>
       </footer>
@@ -477,7 +477,7 @@ function MeView() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-        className="flex justify-center mb-4 md:mb-5"
+        className="flex justify-center mb-4 md:mb-6"
       >
         <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl border border-black/10 bg-white flex items-center justify-center shadow-[0_2px_10px_-3px_rgba(0,0,0,0.1)]">
           <svg viewBox="0 0 24 24" className="w-4 h-4 md:w-5 md:h-5 text-black">
@@ -493,7 +493,7 @@ function MeView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="text-sm md:text-base mb-1.5 md:mb-2 text-gray-700 font-medium"
+        className="text-sm md:text-base mb-2 text-gray-700 font-medium"
       >
         Hey, I'm <span className="font-semibold text-black">Taha</span> 👋
       </motion.p>
@@ -502,7 +502,7 @@ function MeView() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-black tracking-tight mb-2 md:mb-3 leading-tight"
+        className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-2 md:mb-4 leading-tight"
       >
         AI Product Builder
       </motion.h1>
@@ -511,7 +511,7 @@ function MeView() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="text-[11px] sm:text-xs md:text-sm text-gray-500 mb-3 md:mb-5"
+        className="text-xs md:text-sm text-gray-500 mb-6 max-w-[300px] md:max-w-none mx-auto leading-relaxed [text-wrap:balance]"
       >
         Senior VAS &amp; Product Development Manager · 7+ years in telecom across MENA
       </motion.p>
@@ -522,7 +522,7 @@ function MeView() {
         transition={{ duration: 0.7, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
         className="mb-2 md:mb-4"
       >
-        <div className="w-40 h-40 sm:w-44 sm:h-44 md:w-52 md:h-52 mx-auto">
+        <div className="w-44 h-44 sm:w-48 sm:h-48 md:w-52 md:h-52 mx-auto">
           <img
             src="/assets/avatar.png"
             alt="Taha Yasir"
