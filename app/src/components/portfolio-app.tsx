@@ -619,7 +619,7 @@ function ProjectsView() {
               screenBackground={p.screenInsetTop ? "#ffffff" : "#0a0a0a"}
               showIsland={p.frameIsland ?? true}
               showCamera={p.frameIsland ?? true}
-              frameColor="#1c1c1e"
+              frameColor="titanium"
               bezelColor="#000000"
               shadow
               rounded

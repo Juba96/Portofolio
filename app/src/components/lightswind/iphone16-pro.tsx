@@ -99,6 +99,25 @@ export const Iphone16Pro = forwardRef<SVGSVGElement, Iphone16ProProps>(
         `}
                 {...props}
             >
+                {/* Titanium material — banded metal gradient + specular sheen.
+                    Used when frameColor="titanium". */}
+                <defs>
+                    <linearGradient id="om-titanium" x1="0%" y1="0%" x2="85%" y2="100%">
+                        <stop offset="0%" stopColor="#F0EEEA" />
+                        <stop offset="16%" stopColor="#C6C3BE" />
+                        <stop offset="36%" stopColor="#ECE9E5" />
+                        <stop offset="54%" stopColor="#A29F9A" />
+                        <stop offset="74%" stopColor="#D7D4CF" />
+                        <stop offset="100%" stopColor="#8B8883" />
+                    </linearGradient>
+                    <linearGradient id="om-titanium-sheen" x1="0%" y1="0%" x2="100%" y2="26%">
+                        <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+                        <stop offset="42%" stopColor="#ffffff" stopOpacity="0.9" />
+                        <stop offset="58%" stopColor="#ffffff" stopOpacity="0.9" />
+                        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                    </linearGradient>
+                </defs>
+
                 {/* Outer frame */}
                 <rect
                     x="2"
@@ -106,10 +125,26 @@ export const Iphone16Pro = forwardRef<SVGSVGElement, Iphone16ProProps>(
                     width={width - 4}
                     height={height - 4}
                     rx={rounded ? 75 : 0}
-                    fill={svgColor(frameColor)}
-                    className="stroke-gray-200 dark:stroke-white/20"
+                    fill={frameColor === "titanium" ? "url(#om-titanium)" : svgColor(frameColor)}
+                    stroke={frameColor === "titanium" ? "#7E7B76" : undefined}
+                    className={frameColor === "titanium" ? undefined : "stroke-gray-200 dark:stroke-white/20"}
                     strokeWidth="2"
                 />
+
+                {/* Specular sheen across the titanium band */}
+                {frameColor === "titanium" && (
+                    <rect
+                        x="10.5"
+                        y="10.5"
+                        width={width - 21}
+                        height={height - 21}
+                        rx={rounded ? 68 : 0}
+                        fill="none"
+                        stroke="url(#om-titanium-sheen)"
+                        strokeWidth="16"
+                        opacity="0.45"
+                    />
+                )}
 
                 {/* Inner bezel */}
                 <rect
