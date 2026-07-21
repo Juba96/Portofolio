@@ -200,6 +200,23 @@ export function PortfolioApp() {
     }
   }, [messages, isTyping, showChat]);
 
+  // Prefetch all project screens once the page is idle, so the Projects
+  // switcher and its auto-cycle never show a loading pop-in.
+  useEffect(() => {
+    const prefetch = () => {
+      for (const p of projects) {
+        for (const src of p.screens) {
+          const img = new Image();
+          img.src = src;
+        }
+      }
+    };
+    const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => number })
+      .requestIdleCallback;
+    if (idle) idle(prefetch);
+    else setTimeout(prefetch, 1200);
+  }, []);
+
   const typeOutMessage = (text: string, id: number) => {
     setIsTyping(true);
     let i = 0;
@@ -491,8 +508,11 @@ function MeView() {
       >
         <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-52 md:h-52 mx-auto">
           <img
-            src="https://d2ol7oe51mr4n9.cloudfront.net/user_3AesuTQYUP58AfnorNmxCaVZY2f/7238f429-c8ea-4c43-bab5-ebae8139ce00.png"
+            src="/assets/avatar.png"
             alt="Taha Yasir"
+            width={416}
+            height={416}
+            fetchPriority="high"
             className="w-full h-full object-contain avatar-float"
           />
         </div>

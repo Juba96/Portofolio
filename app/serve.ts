@@ -28,12 +28,16 @@ Bun.serve({
       if (filePath.startsWith(CLIENT_DIR)) {
         const file = Bun.file(filePath);
         if (await file.exists()) {
+          // Vite content-hashed bundles (e.g. index-B8hOm5xi.js) are immutable
+          // forever; other static images (avatar, project screens) get a day
+          // of caching plus a week of stale-while-revalidate so replacing a
+          // file doesn't strand visitors on year-old copies.
+          const hashed = /-[A-Za-z0-9_-]{8,}\.\w+$/.test(pathname);
           return new Response(file, {
             headers: {
-              // Vite hashes /assets/* filenames — cache those forever.
-              "cache-control": pathname.startsWith("/assets/")
+              "cache-control": hashed
                 ? "public, max-age=31536000, immutable"
-                : "public, max-age=3600",
+                : "public, max-age=86400, stale-while-revalidate=604800",
             },
           });
         }

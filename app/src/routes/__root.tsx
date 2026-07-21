@@ -93,6 +93,9 @@ function buildHead(meta: AppMeta) {
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      // Start fetching the hero avatar with the HTML — it's the largest
+      // first-paint image and used to pop in late.
+      { rel: "preload", as: "image", href: "/assets/avatar.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com" },
       {
