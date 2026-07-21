@@ -78,7 +78,9 @@ export const Iphone16Pro = forwardRef<SVGSVGElement, Iphone16ProProps>(
             screenGradient,
             hoverAnimation = true,
             contentInsetTop = 0,
-            screenBackground = "#ffffff",
+            // Near-black default: while the screen image loads/decodes the
+            // device reads as "off" instead of flashing a white slab.
+            screenBackground = "#0a0a0a",
             ...props
         }: Iphone16ProProps,
         ref

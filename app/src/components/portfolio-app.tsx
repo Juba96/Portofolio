@@ -544,6 +544,17 @@ function ProjectsView() {
   const goTo = (dir: number) =>
     setActive((a) => (a + dir + projects.length) % projects.length);
 
+  // Warm every screen the moment Projects opens — switching apps or cycling
+  // should never wait on the network.
+  useEffect(() => {
+    for (const proj of projects) {
+      for (const src of proj.screens) {
+        const img = new Image();
+        img.src = src;
+      }
+    }
+  }, []);
+
   // Auto-cycle through the active app's screens (QuizQ has several).
   useEffect(() => {
     setScreenIdx(0);
@@ -589,6 +600,7 @@ function ProjectsView() {
               <Iphone16Pro
                 src={p.screens[screenIdx]}
                 contentInsetTop={p.screenInsetTop ?? 0}
+                screenBackground={p.screenInsetTop ? "#ffffff" : "#0a0a0a"}
                 showIsland={p.frameIsland ?? true}
                 showCamera={p.frameIsland ?? true}
                 frameColor="#1c1c1e"

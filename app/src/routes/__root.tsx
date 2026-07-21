@@ -96,6 +96,11 @@ function buildHead(meta: AppMeta) {
       // Start fetching the hero avatar with the HTML — it's the largest
       // first-paint image and used to pop in late.
       { rel: "preload", as: "image", href: "/assets/avatar.png" },
+      // First screen of each project, so switching apps never flashes an
+      // empty device while the image arrives.
+      { rel: "preload", as: "image", href: "/assets/quizq/screens/home-light.png" },
+      { rel: "preload", as: "image", href: "/assets/ramba/screens/home.png" },
+      { rel: "preload", as: "image", href: "/assets/ooredooai/screens/chat.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com" },
       {
