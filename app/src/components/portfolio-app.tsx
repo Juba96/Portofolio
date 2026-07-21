@@ -189,6 +189,13 @@ export function PortfolioApp() {
   const [showChat, setShowChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Desktop = precise hovering pointer. On touch devices the fluid cursor has
+  // nothing to follow and only burns GPU/memory. (Component is client-only.)
+  const [hasFinePointer] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(hover: hover) and (pointer: fine)").matches,
+  );
 
   useEffect(() => {
     // Scroll ONLY the chat's own scroll container. scrollIntoView would also
@@ -196,7 +203,9 @@ export function PortfolioApp() {
     // viewport (the overflow-hidden root can still be scrolled by the browser).
     const scroller = messagesEndRef.current?.parentElement;
     if (scroller && showChat) {
-      scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+      // Instant scroll: restarting a *smooth* scroll animation on every
+      // typewriter tick thrashes the compositor on mobile.
+      scroller.scrollTo({ top: scroller.scrollHeight });
     }
   }, [messages, isTyping, showChat]);
 
@@ -217,19 +226,21 @@ export function PortfolioApp() {
     else setTimeout(prefetch, 1200);
   }, []);
 
+  // Typewriter effect. Batches 4 chars per 40ms tick (~100 chars/sec) instead
+  // of 1 char per 10ms — the old version forced ~100 full re-renders/sec,
+  // which crashed mobile browsers mid-response on top of the WebGL cursor.
   const typeOutMessage = (text: string, id: number) => {
     setIsTyping(true);
     let i = 0;
     const interval = setInterval(() => {
-      setMessages((prev) =>
-        prev.map((m) => m.id === id ? { ...m, content: text.slice(0, i + 1) } : m),
-      );
-      i++;
+      i = Math.min(i + 4, text.length);
+      const shown = text.slice(0, i);
+      setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, content: shown } : m)));
       if (i >= text.length) {
         clearInterval(interval);
         setIsTyping(false);
       }
-    }, 10);
+    }, 40);
   };
 
   const sendMessage = (text: string) => {
@@ -255,23 +266,27 @@ export function PortfolioApp() {
 
   return (
     <div className="h-dvh w-full flex flex-col bg-white text-black overflow-hidden relative">
-      {/* Smokey cursor — behind content, liquid glass effect */}
-      <SmokeyCursor
-        transparent={true}
-        simulationResolution={128}
-        dyeResolution={1024}
-        densityDissipation={1}
-        velocityDissipation={0.5}
-        curl={3}
-        splatRadius={0.2}
-        splatForce={6000}
-        pressure={0.1}
-        pressureIterations={20}
-        colorUpdateSpeed={10}
-        backgroundColor={{ r: 1, g: 1, b: 1 }}
-        enableShading={true}
-        className="!z-0 !cursor-auto opacity-60"
-      />
+      {/* Smokey cursor — behind content, liquid glass effect. Desktop only:
+          it's a mouse effect, and the WebGL fluid sim's GPU/memory load was
+          crashing mobile browsers during chat responses. */}
+      {hasFinePointer && (
+        <SmokeyCursor
+          transparent={true}
+          simulationResolution={128}
+          dyeResolution={1024}
+          densityDissipation={1}
+          velocityDissipation={0.5}
+          curl={3}
+          splatRadius={0.2}
+          splatForce={6000}
+          pressure={0.1}
+          pressureIterations={20}
+          colorUpdateSpeed={10}
+          backgroundColor={{ r: 1, g: 1, b: 1 }}
+          enableShading={true}
+          className="!z-0 !cursor-auto opacity-60"
+        />
+      )}
 
       {/* Massive watermark */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-none select-none leading-none">
