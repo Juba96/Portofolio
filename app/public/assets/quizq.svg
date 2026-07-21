@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f0f1a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#f97316;stop-opacity:0.1" />
+    </linearGradient>
+    <radialGradient id="glow1" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#fbbf24;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg1)"/>
+  <rect width="800" height="1000" fill="url(#glow1)"/>
+  <!-- Phone frame -->
+  <g transform="translate(200,150)">
+    <rect x="0" y="0" width="400" height="700" rx="48" fill="#18181b" stroke="#fbbf24" stroke-width="3"/>
+    <rect x="140" y="16" width="120" height="28" rx="14" fill="#0f0f12"/>
+    <!-- Screen -->
+    <rect x="16" y="56" width="368" height="628" rx="32" fill="#0a0a0f"/>
+    <!-- Score bar -->
+    <rect x="36" y="80" width="328" height="40" rx="12" fill="#18181b"/>
+    <text x="56" y="106" fill="#fbbf24" font-family="monospace" font-size="16" font-weight="bold">SCORE 00250</text>
+    <text x="300" y="106" fill="#71717a" font-family="monospace" font-size="14">Q 3/10</text>
+    <!-- Question card -->
+    <rect x="36" y="140" width="328" height="220" rx="20" fill="#18181b" stroke="url(#g1)" stroke-width="1"/>
+    <text x="200" y="220" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="22" font-weight="600">صواب أم خطأ؟</text>
+    <text x="200" y="270" text-anchor="middle" fill="#a1a1aa" font-family="sans-serif" font-size="16">هل القاهرة عاصمة مصر؟</text>
+    <!-- Timer -->
+    <rect x="36" y="380" width="328" height="8" rx="4" fill="#27272a"/>
+    <rect x="36" y="380" width="200" height="8" rx="4" fill="#fbbf24"/>
+    <!-- Buttons -->
+    <rect x="36" y="410" width="154" height="80" rx="16" fill="#22c55e"/>
+    <text x="113" y="460" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="20" font-weight="700">صحيح</text>
+    <rect x="210" y="410" width="154" height="80" rx="16" fill="#ef4444"/>
+    <text x="287" y="460" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="20" font-weight="700">خطأ</text>
+    <!-- Streak -->
+    <circle cx="100" cy="540" r="20" fill="#fbbf24"/>
+    <text x="100" y="546" text-anchor="middle" fill="#000" font-family="sans-serif" font-size="14" font-weight="700">🔥</text>
+    <text x="130" y="546" fill="#fbbf24" font-family="sans-serif" font-size="18" font-weight="700">7x streak</text>
+  </g>
+  <text x="400" y="920" text-anchor="middle" fill="#fbbf24" font-family="sans-serif" font-size="28" font-weight="700">QuizQ</text>
+  <text x="400" y="960" text-anchor="middle" fill="#71717a" font-family="sans-serif" font-size="14">Speed Quiz · DCB Monetized</text>
+</svg>

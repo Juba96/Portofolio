@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="obg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e1b4b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f0e1a;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="oglow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" style="stop-color:#a78bfa;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#obg)"/>
+  <rect width="800" height="1000" fill="url(#oglow)"/>
+  <!-- Dashboard UI -->
+  <g transform="translate(100,150)">
+    <rect x="0" y="0" width="600" height="420" rx="20" fill="#1e1b3a" stroke="#8b5cf6" stroke-width="1"/>
+    <!-- Header -->
+    <text x="24" y="48" fill="#fff" font-family="sans-serif" font-size="18" font-weight="700">OoredooAI</text>
+    <text x="24" y="70" fill="#a78bfa" font-family="sans-serif" font-size="11">VAS Customer Acquisition Engine</text>
+    <!-- KPI cards -->
+    <g transform="translate(24,90)">
+      <rect x="0" y="0" width="170" height="80" rx="12" fill="#312e81"/>
+      <text x="12" y="30" fill="#c4b5fd" font-family="sans-serif" font-size="10">LEADS TODAY</text>
+      <text x="12" y="60" fill="#fff" font-family="sans-serif" font-size="24" font-weight="800">2,847</text>
+    </g>
+    <g transform="translate(218,90)">
+      <rect x="0" y="0" width="170" height="80" rx="12" fill="#312e81"/>
+      <text x="12" y="30" fill="#c4b5fd" font-family="sans-serif" font-size="10">CPA</text>
+      <text x="12" y="60" fill="#4ade80" font-family="sans-serif" font-size="24" font-weight="800">0.82 IQD</text>
+    </g>
+    <g transform="translate(412,90)">
+      <rect x="0" y="0" width="164" height="80" rx="12" fill="#312e81"/>
+      <text x="12" y="30" fill="#c4b5fd" font-family="sans-serif" font-size="10">CONVERSION</text>
+      <text x="12" y="60" fill="#fbbf24" font-family="sans-serif" font-size="24" font-weight="800">4.7%</text>
+    </g>
+    <!-- Chart -->
+    <rect x="24" y="190" width="552" height="200" rx="12" fill="#2a2757"/>
+    <path d="M40 350 Q 100 320 160 340 T 280 280 T 400 250 T 520 220 T 560 200" stroke="#a78bfa" stroke-width="3" fill="none"/>
+    <path d="M40 350 Q 100 320 160 340 T 280 280 T 400 250 T 520 220 T 560 200 L 560 380 L 40 380 Z" fill="url(#ochart)" opacity="0.2"/>
+    <defs>
+      <linearGradient id="ochart" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#a78bfa;stop-opacity:0.5"/>
+        <stop offset="100%" style="stop-color:#a78bfa;stop-opacity:0"/>
+      </linearGradient>
+    </defs>
+    <!-- Channels -->
+    <g transform="translate(40,240)">
+      <circle cx="0" cy="0" r="6" fill="#ef4444"/>
+      <text x="14" y="4" fill="#c4b5fd" font-family="sans-serif" font-size="10">USSD</text>
+    </g>
+    <g transform="translate(100,240)">
+      <circle cx="0" cy="0" r="6" fill="#25d366"/>
+      <text x="14" y="4" fill="#c4b5fd" font-family="sans-serif" font-size="10">WhatsApp</text>
+    </g>
+    <g transform="translate(200,240)">
+      <circle cx="0" cy="0" r="6" fill="#fbbf24"/>
+      <text x="14" y="4" fill="#c4b5fd" font-family="sans-serif" font-size="10">SMS</text>
+    </g>
+    <g transform="translate(270,240)">
+      <circle cx="0" cy="0" r="6" fill="#3b82f6"/>
+      <text x="14" y="4" fill="#c4b5fd" font-family="sans-serif" font-size="10">Header Enrichment</text>
+    </g>
+  </g>
+  <!-- Phone mini -->
+  <g transform="translate(540,480)">
+    <rect x="0" y="0" width="200" height="350" rx="24" fill="#1e1b3a" stroke="#a78bfa" stroke-width="2"/>
+    <rect x="10" y="40" width="180" height="290" rx="16" fill="#0f0e1a"/>
+    <!-- AI chat -->
+    <rect x="20" y="60" width="130" height="40" rx="12" fill="#312e81"/>
+    <text x="30" y="85" fill="#fff" font-family="sans-serif" font-size="9">Optimize campaign?</text>
+    <rect x="70" y="110" width="110" height="40" rx="12" fill="#7c3aed"/>
+    <text x="80" y="135" fill="#fff" font-family="sans-serif" font-size="9">Increasing SMS 40%...</text>
+    <rect x="20" y="160" width="150" height="50" rx="12" fill="#312e81"/>
+    <text x="30" y="180" fill="#fff" font-family="sans-serif" font-size="9">+12% conversion</text>
+    <text x="30" y="195" fill="#4ade80" font-family="sans-serif" font-size="9">predicted uplift</text>
+  </g>
+  <text x="400" y="920" text-anchor="middle" fill="#a78bfa" font-family="sans-serif" font-size="28" font-weight="700">OoredooAI</text>
+  <text x="400" y="960" text-anchor="middle" fill="#c4b5fd" font-family="sans-serif" font-size="14">AI-Powered VAS Engine · CPA Optimization</text>
+</svg>

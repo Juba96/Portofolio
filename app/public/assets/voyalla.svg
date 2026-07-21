@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="vbg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2a1a0a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a0806;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="vglow" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#f43f5e;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#f43f5e;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#vbg)"/>
+  <rect width="800" height="1000" fill="url(#vglow)"/>
+  <!-- Phone landscape cinematic -->
+  <g transform="translate(100,180)">
+    <rect x="0" y="0" width="600" height="340" rx="24" fill="#18100a" stroke="#f43f5e" stroke-width="2"/>
+    <!-- Cinematic scene -->
+    <defs>
+      <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#1e3a5f"/>
+        <stop offset="40%" style="stop-color:#f97316"/>
+        <stop offset="80%" style="stop-color:#fbbf24"/>
+        <stop offset="100%" style="stop-color:#92400e"/>
+      </linearGradient>
+    </defs>
+    <rect x="16" y="16" width="568" height="308" rx="12" fill="url(#sky)"/>
+    <!-- Mountain silhouette -->
+    <path d="M16 250 L 100 180 L 160 220 L 250 120 L 340 200 L 420 150 L 520 210 L 584 180 L 584 324 L 16 324 Z" fill="#1c1917"/>
+    <!-- Sun -->
+    <circle cx="450" cy="160" r="28" fill="#fef3c7" opacity="0.9"/>
+    <!-- Player controls -->
+    <rect x="16" y="288" width="568" height="36" fill="rgba(0,0,0,0.5)"/>
+    <circle cx="44" cy="306" r="8" fill="#fff"/>
+    <rect x="80" y="303" width="420" height="6" rx="3" fill="rgba(255,255,255,0.2)"/>
+    <rect x="80" y="303" width="200" height="6" rx="3" fill="#f43f5e"/>
+    <text x="510" y="311" fill="rgba(255,255,255,0.7)" font-family="monospace" font-size="10">2:34 / 6:12</text>
+  </g>
+  <!-- Voiceover / story card -->
+  <g transform="translate(100,560)">
+    <rect x="0" y="0" width="600" height="180" rx="16" fill="#1c1917" stroke="#f43f5e" stroke-width="1"/>
+    <circle cx="40" cy="50" r="20" fill="#f43f5e"/>
+    <text x="40" y="56" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="16" font-weight="700">V</text>
+    <text x="72" y="44" fill="#fff" font-family="sans-serif" font-size="14" font-weight="700">Voyalla Narrator</text>
+    <text x="72" y="64" fill="#f43f5e" font-family="sans-serif" font-size="11">AI Voice · Arabic</text>
+    <!-- Waveform -->
+    <rect x="40" y="100" width="520" height="50" rx="8" fill="#292524"/>
+    <g transform="translate(50,115)">
+      <rect x="0" y="20" width="3" height="20" fill="#f43f5e" rx="1"/>
+      <rect x="8" y="10" width="3" height="40" fill="#f43f5e" rx="1"/>
+      <rect x="16" y="15" width="3" height="30" fill="#f43f5e" rx="1"/>
+      <rect x="24" y="0" width="3" height="50" fill="#fb7185" rx="1"/>
+      <rect x="32" y="8" width="3" height="44" fill="#f43f5e" rx="1"/>
+      <rect x="40" y="18" width="3" height="24" fill="#f43f5e" rx="1"/>
+      <rect x="48" y="5" width="3" height="48" fill="#fb7185" rx="1"/>
+      <rect x="56" y="20" width="3" height="20" fill="#f43f5e" rx="1"/>
+      <rect x="64" y="12" width="3" height="36" fill="#f43f5e" rx="1"/>
+      <rect x="72" y="2" width="3" height="52" fill="#fb7185" rx="1"/>
+      <rect x="80" y="16" width="3" height="28" fill="#f43f5e" rx="1"/>
+      <rect x="88" y="8" width="3" height="42" fill="#f43f5e" rx="1"/>
+      <rect x="96" y="22" width="3" height="16" fill="#f43f5e" rx="1"/>
+      <rect x="104" y="14" width="3" height="32" fill="#f43f5e" rx="1"/>
+      <rect x="112" y="4" width="3" height="46" fill="#fb7185" rx="1"/>
+      <rect x="120" y="18" width="3" height="26" fill="#f43f5e" rx="1"/>
+      <rect x="128" y="10" width="3" height="38" fill="#f43f5e" rx="1"/>
+      <rect x="136" y="20" width="3" height="20" fill="#f43f5e" rx="1"/>
+      <rect x="144" y="6" width="3" height="46" fill="#f43f5e" rx="1"/>
+      <rect x="152" y="14" width="3" height="32" fill="#f43f5e" rx="1"/>
+      <rect x="160" y="22" width="3" height="18" fill="#f43f5e" rx="1"/>
+      <rect x="168" y="8" width="3" height="42" fill="#fb7185" rx="1"/>
+      <rect x="176" y="16" width="3" height="28" fill="#f43f5e" rx="1"/>
+      <rect x="184" y="2" width="3" height="52" fill="#f43f5e" rx="1"/>
+      <rect x="192" y="20" width="3" height="20" fill="#f43f5e" rx="1"/>
+      <rect x="200" y="12" width="3" height="36" fill="#f43f5e" rx="1"/>
+      <rect x="208" y="18" width="3" height="26" fill="#f43f5e" rx="1"/>
+      <rect x="216" y="6" width="3" height="44" fill="#fb7185" rx="1"/>
+      <rect x="224" y="14" width="3" height="32" fill="#f43f5e" rx="1"/>
+      <rect x="232" y="22" width="3" height="18" fill="#f43f5e" rx="1"/>
+      <rect x="240" y="4" width="3" height="48" fill="#f43f5e" rx="1"/>
+      <rect x="248" y="16" width="3" height="28" fill="#f43f5e" rx="1"/>
+      <rect x="256" y="10" width="3" height="40" fill="#f43f5e" rx="1"/>
+      <rect x="264" y="20" width="3" height="22" fill="#f43f5e" rx="1"/>
+      <rect x="272" y="0" width="3" height="50" fill="#fb7185" rx="1"/>
+      <rect x="280" y="12" width="3" height="38" fill="#f43f5e" rx="1"/>
+      <rect x="288" y="18" width="3" height="24" fill="#f43f5e" rx="1"/>
+      <rect x="296" y="8" width="3" height="44" fill="#f43f5e" rx="1"/>
+      <rect x="304" y="22" width="3" height="16" fill="#f43f5e" rx="1"/>
+      <rect x="312" y="14" width="3" height="34" fill="#f43f5e" rx="1"/>
+      <rect x="320" y="6" width="3" height="48" fill="#fb7185" rx="1"/>
+      <rect x="328" y="16" width="3" height="28" fill="#f43f5e" rx="1"/>
+      <rect x="336" y="10" width="3" height="40" fill="#f43f5e" rx="1"/>
+      <rect x="344" y="20" width="3" height="22" fill="#f43f5e" rx="1"/>
+      <rect x="352" y="4" width="3" height="48" fill="#f43f5e" rx="1"/>
+      <rect x="360" y="18" width="3" height="26" fill="#f43f5e" rx="1"/>
+      <rect x="368" y="12" width="3" height="36" fill="#f43f5e" rx="1"/>
+      <rect x="376" y="22" width="3" height="16" fill="#f43f5e" rx="1"/>
+      <rect x="384" y="8" width="3" height="44" fill="#f43f5e" rx="1"/>
+      <rect x="392" y="16" width="3" height="28" fill="#f43f5e" rx="1"/>
+      <rect x="400" y="14" width="3" height="32" fill="#f43f5e" rx="1"/>
+      <rect x="408" y="2" width="3" height="50" fill="#fb7185" rx="1"/>
+      <rect x="416" y="20" width="3" height="20" fill="#f43f5e" rx="1"/>
+      <rect x="424" y="10" width="3" height="42" fill="#f43f5e" rx="1"/>
+      <rect x="432" y="18" width="3" height="26" fill="#f43f5e" rx="1"/>
+      <rect x="440" y="6" width="3" height="46" fill="#f43f5e" rx="1"/>
+      <rect x="448" y="22" width="3" height="16" fill="#f43f5e" rx="1"/>
+      <rect x="456" y="12" width="3" height="38" fill="#f43f5e" rx="1"/>
+      <rect x="464" y="16" width="3" height="30" fill="#f43f5e" rx="1"/>
+      <rect x="472" y="8" width="3" height="42" fill="#f43f5e" rx="1"/>
+      <rect x="480" y="20" width="3" height="22" fill="#f43f5e" rx="1"/>
+      <rect x="488" y="14" width="3" height="32" fill="#f43f5e" rx="1"/>
+      <rect x="496" y="4" width="3" height="50" fill="#fb7185" rx="1"/>
+      <rect x="504" y="18" width="3" height="26" fill="#f43f5e" rx="1"/>
+    </g>
+  </g>
+  <text x="400" y="920" text-anchor="middle" fill="#f43f5e" font-family="sans-serif" font-size="28" font-weight="700">Voyalla</text>
+  <text x="400" y="960" text-anchor="middle" fill="#fda4af" font-family="sans-serif" font-size="14">AI Travel Storytelling · Generative Video</text>
+</svg>
