@@ -298,8 +298,9 @@ export function PortfolioApp() {
       {/* Info hub — morphing fluid action panel (replaces the old i-button modal) */}
       <FluidActionPanel position="top-right" />
 
-      {/* Main content area */}
-      <main className="flex-1 flex items-center justify-center px-3 md:px-10 relative z-10 overflow-hidden">
+      {/* Main content area. Mobile: scrollable so no view ever clips (m-auto
+          keeps short content centered); desktop: fixed, centered. */}
+      <main className="flex-1 flex px-3 md:px-10 relative z-10 overflow-y-auto md:overflow-hidden md:items-center md:justify-center">
         <AnimatePresence mode="wait">
           {!showChat && (
             <motion.div
@@ -308,7 +309,7 @@ export function PortfolioApp() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-2xl"
+              className="w-full max-w-2xl m-auto py-3 md:py-0"
             >
               {view === "me" && <MeView />}
               {view === "projects" && <ProjectsView />}
@@ -325,7 +326,7 @@ export function PortfolioApp() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-xl"
+              className="w-full max-w-xl m-auto py-3 md:py-0"
             >
               <ChatView
                 messages={messages}
@@ -338,7 +339,7 @@ export function PortfolioApp() {
       </main>
 
       {/* Bottom section */}
-      <footer className="relative z-20 px-3 md:px-10 pb-4 md:pb-6 pt-1 md:pt-2">
+      <footer className="relative z-20 px-3 md:px-10 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-6 pt-1 md:pt-2">
         {/* Toggle / back button */}
         <div className="flex items-center justify-center mb-2">
           {showChat ? (
@@ -386,7 +387,7 @@ export function PortfolioApp() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.3 + i * 0.06 }}
                   onClick={() => sendMessage(q)}
-                  className="quick-q-btn liquid-glass text-[9px] sm:text-[10px] px-2.5 py-1.5 rounded-full text-gray-600 transition-all duration-300"
+                  className="quick-q-btn liquid-glass text-[11px] px-3 py-2 md:text-[10px] md:px-2.5 md:py-1.5 rounded-full text-gray-600 transition-all duration-300"
                 >
                   {q}
                 </motion.button>
@@ -442,7 +443,7 @@ export function PortfolioApp() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask me anything..."
-              className="liquid-glass w-full rounded-full px-4 md:px-5 py-2.5 md:py-3.5 pr-12 md:pr-14 text-sm placeholder:text-gray-400 focus:outline-none transition-all duration-300"
+              className="liquid-glass w-full rounded-full px-4 md:px-5 py-2.5 md:py-3.5 pr-12 md:pr-14 text-base md:text-sm placeholder:text-gray-400 focus:outline-none transition-all duration-300"
             />
             <button
               type="submit"
@@ -521,7 +522,7 @@ function MeView() {
         transition={{ duration: 0.7, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
         className="mb-2 md:mb-4"
       >
-        <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-52 md:h-52 mx-auto">
+        <div className="w-40 h-40 sm:w-44 sm:h-44 md:w-52 md:h-52 mx-auto">
           <img
             src="/assets/avatar.png"
             alt="Taha Yasir"
@@ -540,6 +541,8 @@ function ProjectsView() {
   const [active, setActive] = useState(0);
   const [screenIdx, setScreenIdx] = useState(0);
   const p = projects[active];
+  const goTo = (dir: number) =>
+    setActive((a) => (a + dir + projects.length) % projects.length);
 
   // Auto-cycle through the active app's screens (QuizQ has several).
   useEffect(() => {
@@ -572,6 +575,16 @@ function ProjectsView() {
               animate={{ opacity: 1, x: 0, rotate: 0, scale: 1 }}
               exit={{ opacity: 0, x: -70, rotate: -8, scale: 0.92 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              // Native-feel swipe between apps; vertical panning stays free
+              // for page scroll.
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.25}
+              onDragEnd={(_, info) => {
+                if (info.offset.x < -60) goTo(1);
+                else if (info.offset.x > 60) goTo(-1);
+              }}
+              style={{ touchAction: "pan-y" }}
             >
               <Iphone16Pro
                 src={p.screens[screenIdx]}
