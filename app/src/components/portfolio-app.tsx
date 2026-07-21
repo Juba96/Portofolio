@@ -378,7 +378,7 @@ export function PortfolioApp() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className="flex flex-wrap justify-center gap-2 mb-3 max-w-md mx-auto"
+              className="flex flex-wrap justify-center gap-2 mb-3 max-w-md md:max-w-none mx-auto"
             >
               {suggestedQuestions.map((q, i) => (
                 <motion.button
@@ -589,7 +589,7 @@ function ProjectsView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="text-xl md:text-2xl font-bold mb-3 md:mb-4 tracking-tight text-center"
+        className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 tracking-tight text-center"
       >
         My Projects
       </motion.h2>
@@ -646,14 +646,14 @@ function ProjectsView() {
             <div className="text-[10px] font-medium text-gray-400 uppercase tracking-widest mb-1">
               {p.subtitle}
             </div>
-            <h3 className="font-bold text-xl md:text-2xl mb-1.5">{p.title}</h3>
+            <h3 className="font-bold text-xl md:text-2xl mb-2">{p.title}</h3>
             <p className="text-xs md:text-sm text-gray-500 leading-relaxed">{p.desc}</p>
           </motion.div>
         </AnimatePresence>
       </div>
 
       {/* App switcher */}
-      <div className="flex justify-center gap-2 mt-3 md:mt-4">
+      <div className="flex justify-center gap-2 mt-4 md:mt-6">
         {projects.map((proj, i) => (
           <button
             key={proj.title}
@@ -678,12 +678,12 @@ function SkillsView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="text-2xl md:text-3xl font-bold mb-4 tracking-tight text-center"
+        className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 tracking-tight text-center"
       >
         Skills &amp; Expertise
       </motion.h2>
 
-      <div className="space-y-5 mt-5">
+      <div className="space-y-4">
         {skillCategories.map((cat, ci) => (
           <motion.div
             key={cat.name}
@@ -732,7 +732,7 @@ function FunView() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="text-2xl md:text-3xl font-bold mb-5 tracking-tight text-center"
+        className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 tracking-tight text-center"
       >
         Fun Stuff
       </motion.h2>
@@ -748,7 +748,7 @@ function FunView() {
             className="rounded-2xl p-4 border border-black/10 bg-white hover:border-black/15 transition-all duration-300 text-center shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)]"
           >
             <div className="text-3xl mb-2">{item.icon}</div>
-            <h3 className="font-bold text-sm mb-1.5">{item.title}</h3>
+            <h3 className="font-bold text-sm mb-2">{item.title}</h3>
             <p className="text-[11px] text-gray-500 leading-relaxed">{item.desc}</p>
           </motion.div>
         ))}
@@ -773,7 +773,7 @@ function ContactView() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="bg-white rounded-2xl p-5 md:p-6 border border-black/10 shadow-[0_4px_20px_-6px_rgba(0,0,0,0.08)]"
+        className="bg-white rounded-2xl p-6 border border-black/10 shadow-[0_4px_20px_-6px_rgba(0,0,0,0.08)]"
       >
         <div className="flex items-start justify-between mb-3">
           <h2 className="text-xl font-bold tracking-tight">Contacts</h2>
@@ -785,7 +785,7 @@ function ContactView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="text-blue-500 font-medium text-sm hover:text-blue-600 transition-colors inline-flex items-center gap-1 mb-5"
+          className="text-blue-500 font-medium text-sm hover:text-blue-600 transition-colors inline-flex items-center gap-1 mb-6"
         >
           tahayasser96@gmail.com
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -822,7 +822,7 @@ function ContactView() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.35 }}
-        className="text-center text-xs text-gray-500 mt-5"
+        className="text-center text-xs text-gray-500 mt-6"
       >
         You can reach me super easily! Just hit me up via:
       </motion.p>
