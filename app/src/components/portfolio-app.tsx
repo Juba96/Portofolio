@@ -185,7 +185,11 @@ export function PortfolioApp() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+  // Desktop shows the quick questions by default; on phones they start
+  // hidden (they swap places with the nav cards to avoid scrolling).
+  const [showQuickQuestions, setShowQuickQuestions] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches,
+  );
   const [showChat, setShowChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -396,13 +400,15 @@ export function PortfolioApp() {
           )}
         </AnimatePresence>
 
-        {/* Nav cards */}
+        {/* Nav cards. On phones they swap places with the quick questions
+            (mutually exclusive) so the footer never forces scrolling;
+            desktop always shows them. */}
         {!showChat && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="flex justify-center mb-3"
+            className={`${showQuickQuestions ? "hidden md:flex" : "flex"} justify-center mb-3`}
           >
             <div className="grid grid-cols-5 gap-2 w-full max-w-[360px] md:w-auto md:max-w-none md:flex md:items-stretch md:gap-3">
               {navItems.map((item, i) => (
