@@ -623,7 +623,12 @@ function ProjectsView() {
               bezelColor="#000000"
               shadow
               rounded
-              className="w-full h-auto drop-shadow-2xl"
+              // No filter shadow on phones: iOS Safari rasterizes the filter
+              // against the layer's rectangular bounds while the element is
+              // dragged/animated, painting a boxy shadow ghost behind the
+              // device. (This className overrides the component's own
+              // drop-shadow class.)
+              className="w-full h-auto md:drop-shadow-2xl"
             />
           </motion.div>
         </div>
