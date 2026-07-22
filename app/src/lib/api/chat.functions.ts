@@ -82,28 +82,72 @@ const chatInput = z.object({
     .max(30),
 });
 
+type ChatTurn = z.infer<typeof chatInput>["messages"][number];
+
+// Google Gemini — free tier via aistudio.google.com (no credit card), which
+// makes it the primary provider for this low-traffic chat.
+async function askGemini(messages: ChatTurn[], apiKey: string): Promise<string | null> {
+  const res = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: messages.map((m) => ({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }],
+        })),
+        // Thinking off: short factual Q&A doesn't need it, and thinking
+        // tokens would eat into the free-tier quota.
+        generationConfig: { maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
+      }),
+    },
+  );
+  if (!res.ok) throw new Error(`Gemini API ${res.status}: ${await res.text()}`);
+  const body = (await res.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  const text = (body.candidates?.[0]?.content?.parts ?? [])
+    .map((p) => p.text ?? "")
+    .join("")
+    .trim();
+  return text || null;
+}
+
+async function askClaude(messages: ChatTurn[]): Promise<string | null> {
+  const response = await new Anthropic().messages.create({
+    model: "claude-haiku-4-5",
+    max_tokens: 1024,
+    system: SYSTEM_PROMPT,
+    messages,
+  });
+  const reply = response.content
+    .filter((block) => block.type === "text")
+    .map((block) => block.text)
+    .join("")
+    .trim();
+  return reply || null;
+}
+
 export const askPortfolioChat = createServerFn({ method: "POST" })
   .inputValidator(chatInput)
   .handler(async ({ data }) => {
-    if (!process.env.ANTHROPIC_API_KEY) return { reply: null };
-    try {
-      const client = new Anthropic();
-      // Haiku: cheapest Claude tier ($1/$5 per MTok) — plenty for short
-      // profile Q&A, keeps cost at fractions of a cent per reply.
-      const response = await client.messages.create({
-        model: "claude-haiku-4-5",
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        messages: data.messages,
-      });
-      const reply = response.content
-        .filter((block) => block.type === "text")
-        .map((block) => block.text)
-        .join("")
-        .trim();
-      return { reply: reply || null };
-    } catch (error) {
-      console.error("portfolio chat: Claude API call failed", error);
-      return { reply: null };
+    // Provider chain: Gemini (free tier) → Claude Haiku (if key set) →
+    // { reply: null }, which the client turns into the keyword fallback.
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        return { reply: await askGemini(data.messages, process.env.GEMINI_API_KEY) };
+      } catch (error) {
+        console.error("portfolio chat: Gemini call failed", error);
+      }
     }
+    if (process.env.ANTHROPIC_API_KEY) {
+      try {
+        return { reply: await askClaude(data.messages) };
+      } catch (error) {
+        console.error("portfolio chat: Claude call failed", error);
+      }
+    }
+    return { reply: null };
   });
