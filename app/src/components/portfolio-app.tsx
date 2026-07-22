@@ -619,6 +619,21 @@ function MeView() {
           />
         </div>
       </motion.div>
+
+      {/* Recruiter fast lane — zero-click scannable overview */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <a
+          href="/overview"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full liquid-glass text-xs md:text-sm font-medium text-gray-700 hover:text-black transition-colors"
+        >
+          In a hurry? 60-second overview
+          <span aria-hidden>→</span>
+        </a>
+      </motion.div>
     </div>
   );
 }
