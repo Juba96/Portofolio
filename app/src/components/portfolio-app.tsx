@@ -24,9 +24,9 @@ const knowledgeBase: { [key: string]: string } = {
   "projects": "I've built 4 products under Qaysariya Studio: QuizQ (bilingual speed-quiz PWA with DCB), Ramba (car-wash subscription platform), OoredooAI (AI-powered VAS engine), and Voyalla (AI-driven travel content). I also led the Ooredoo Algeria Mega Promo Service launch and Khalaspay carrier billing integration.",
   "products": "Four products through Qaysariya: QuizQ, Ramba, OoredooAI, Voyalla — each solving a specific MENA market problem from gaming to fintech to travel.",
   "work": "I'm Senior VAS & Product Development Manager at Al-Bawaba Telecom, and I run Qaysariya Studio where I build AI products — QuizQ, Ramba, and OoredooAI are all studio work.",
-  "contact": "📧 tahayasser96@gmail.com\n📱 +964 783 829 1196\n🔗 linkedin.com/in/taha-algburi\n📍 Baghdad, Iraq",
-  "email": "tahayasser96@gmail.com",
-  "phone": "+964 783 829 1196",
+  "contact": "The best way to reach me is LinkedIn: 🔗 linkedin.com/in/taha-algburi — I'm based in Baghdad, Iraq 📍",
+  "email": "I keep contact on LinkedIn — connect with me at linkedin.com/in/taha-algburi and we can take it from there.",
+  "phone": "I keep contact on LinkedIn — connect with me at linkedin.com/in/taha-algburi and we can take it from there.",
   "location": "Baghdad, Iraq 🇮🇶",
   "company": "Al-Bawaba Telecom and Qaysariya Studio.",
   "qaysariya": "Qaysariya is my independent product studio building AI-directed, monetized digital products for MENA markets. Products: QuizQ, Ramba, OoredooAI, Voyalla.",
@@ -247,18 +247,86 @@ export function PortfolioApp() {
     }, 40);
   };
 
+  // Stream the LLM reply from /api/chat into a live assistant bubble.
+  // Returns the full reply text, or null when the client should fall back
+  // (endpoint unavailable, upstream error, or empty stream). If the stream
+  // dies midway with partial text already shown, the partial is kept.
+  const streamAssistantReply = async (
+    history: { role: "user" | "assistant"; content: string }[],
+  ): Promise<string | null> => {
+    let assistantId: number | null = null;
+    let full = "";
+    const showChunk = (text: string) => {
+      if (assistantId === null) {
+        assistantId = Date.now() + 1;
+        const id = assistantId;
+        setMessages((prev) => [...prev, { id, role: "assistant", content: text }]);
+      } else {
+        const id = assistantId;
+        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, content: text } : m)));
+      }
+    };
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ messages: history.slice(-20) }),
+      });
+      if (!res.ok || !res.body) return null;
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const piece = decoder.decode(value, { stream: true });
+        if (!piece) continue;
+        full += piece;
+        showChunk(full);
+      }
+    } catch {
+      // Mid-stream failure: keep whatever already rendered, else fall back.
+    }
+    if (!full.trim()) {
+      if (assistantId !== null) {
+        const id = assistantId;
+        setMessages((prev) => prev.filter((m) => m.id !== id));
+      }
+      return null;
+    }
+    setIsTyping(false);
+    return full;
+  };
+
   const sendMessage = async (text: string) => {
     const content = text.trim();
     if (!content || isTyping) return;
     setShowChat(true);
-    // Typing dots show while the request is in flight; the assistant bubble is
-    // only added once the reply is ready (avoids an empty pill during the wait).
+    // Typing dots show while the request is in flight; the assistant bubble
+    // appears with the first streamed chunk (or the fallback answer).
     setIsTyping(true);
     setMessages((prev) => [...prev, { id: Date.now(), role: "user", content }]);
     setInput("");
     const history = [...chatHistoryRef.current, { role: "user" as const, content }];
-    // Real Claude reply via the server function; keyword matcher is the
-    // offline/no-key/error fallback so the chat always answers.
+
+    // Quick questions are fixed strings with curated answers — reply
+    // instantly instead of paying an LLM round trip.
+    if (suggestedQuestions.includes(content)) {
+      const answer = findAnswer(content);
+      chatHistoryRef.current = [...history, { role: "assistant", content: answer }];
+      await new Promise((r) => setTimeout(r, 350));
+      const assistantId = Date.now() + 1;
+      setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "" }]);
+      typeOutMessage(answer, assistantId);
+      return;
+    }
+
+    // Free-typed questions: streamed LLM reply first, then the non-streaming
+    // server function, then the keyword matcher — the chat always answers.
+    const streamed = await streamAssistantReply(history);
+    if (streamed) {
+      chatHistoryRef.current = [...history, { role: "assistant", content: streamed }];
+      return;
+    }
     let answer: string;
     try {
       const res = await askPortfolioChat({ data: { messages: history.slice(-20) } });
