@@ -10,8 +10,8 @@ export function Contact() {
   const links = [
     {
       label: "Email",
-      value: "tahayasser96@gmail.com",
-      href: "mailto:tahayasser96@gmail.com",
+      value: "Taha@qaysariya.com",
+      href: "mailto:Taha@qaysariya.com",
       icon: (
         <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -20,8 +20,8 @@ export function Contact() {
     },
     {
       label: "Phone",
-      value: "+964 783 829 1196",
-      href: "tel:+9647838291196",
+      value: "Taha@qaysariya.com",
+      href: "mailto:Taha@qaysariya.com",
       icon: (
         <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -90,7 +90,7 @@ export function Contact() {
           </div>
 
           <motion.a
-            href="mailto:tahayasser96@gmail.com"
+            href="mailto:Taha@qaysariya.com"
             initial={{ opacity: 0, y: 15 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}

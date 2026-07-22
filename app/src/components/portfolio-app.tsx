@@ -24,9 +24,9 @@ const knowledgeBase: { [key: string]: string } = {
   "projects": "I've built 4 products under Qaysariya Studio: QuizQ (bilingual speed-quiz PWA with DCB), Ramba (car-wash subscription platform), OoredooAI (AI-powered VAS engine), and Voyalla (AI-driven travel content). I also led the Ooredoo Algeria Mega Promo Service launch and Khalaspay carrier billing integration.",
   "products": "Four products through Qaysariya: QuizQ, Ramba, OoredooAI, Voyalla — each solving a specific MENA market problem from gaming to fintech to travel.",
   "work": "I'm Senior VAS & Product Development Manager at Al-Bawaba Telecom, and I run Qaysariya Studio where I build AI products — QuizQ, Ramba, and OoredooAI are all studio work.",
-  "contact": "The best way to reach me is LinkedIn: 🔗 linkedin.com/in/taha-algburi — I'm based in Baghdad, Iraq 📍",
-  "email": "I keep contact on LinkedIn — connect with me at linkedin.com/in/taha-algburi and we can take it from there.",
-  "phone": "I keep contact on LinkedIn — connect with me at linkedin.com/in/taha-algburi and we can take it from there.",
+  "contact": "📧 Taha@qaysariya.com\n🔗 linkedin.com/in/taha-algburi\n📍 Baghdad, Iraq",
+  "email": "You can email me at Taha@qaysariya.com — or connect on LinkedIn: linkedin.com/in/taha-algburi.",
+  "phone": "I keep calls off the site — email me at Taha@qaysariya.com or connect on LinkedIn (linkedin.com/in/taha-algburi) and we can take it from there.",
   "location": "Baghdad, Iraq 🇮🇶",
   "company": "Al-Bawaba Telecom and Qaysariya Studio.",
   "qaysariya": "Qaysariya is my independent product studio building AI-directed, monetized digital products for MENA markets. Products: QuizQ, Ramba, OoredooAI, Voyalla.",
@@ -882,13 +882,13 @@ function ContactView() {
         </div>
 
         <motion.a
-          href="mailto:tahayasser96@gmail.com"
+          href="mailto:Taha@qaysariya.com"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
           className="text-blue-500 font-medium text-sm hover:text-blue-600 transition-colors inline-flex items-center gap-1 mb-6"
         >
-          tahayasser96@gmail.com
+          Taha@qaysariya.com
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -900,15 +900,13 @@ function ContactView() {
           transition={{ duration: 0.4, delay: 0.2 }}
           className="flex flex-wrap gap-x-4 gap-y-2"
         >
-          {["Email", "LinkedIn", "Phone"].map((s) => (
+          {["Email", "LinkedIn"].map((s) => (
             <a
               key={s}
               href={
                 s === "Email"
-                  ? "mailto:tahayasser96@gmail.com"
-                  : s === "Phone"
-                    ? "tel:+9647838291196"
-                    : "https://www.linkedin.com/in/taha-algburi/"
+                  ? "mailto:Taha@qaysariya.com"
+                  : "https://www.linkedin.com/in/taha-algburi/"
               }
               {...(s === "LinkedIn" ? { target: "_blank", rel: "noreferrer" } : {})}
               className="text-[12px] text-gray-500 hover:text-gray-800 transition-colors"

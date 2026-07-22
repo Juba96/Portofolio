@@ -504,7 +504,7 @@ function ContactSection() {
               <div className="mt-12 flex flex-wrap justify-center gap-4">
                 <Magnetic>
                   <a
-                    href="mailto:tahayasser96@gmail.com"
+                    href="mailto:Taha@qaysariya.com"
                     className="group inline-flex items-center gap-2 rounded-full bg-amber-500 px-8 py-3 font-medium text-black transition-all hover:bg-amber-400"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -529,7 +529,7 @@ function ContactSection() {
               </div>
 
               <p className="mt-8 text-sm text-white/40">
-                tahayasser96@gmail.com · +964 7838291196 · Baghdad, Iraq
+                Taha@qaysariya.com · Baghdad, Iraq
               </p>
             </div>
           </div>

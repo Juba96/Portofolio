@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Info, X, Link2, Check, Mail, Phone, Share2 } from "lucide-react";
+import { Info, X, Link2, Check, Mail, Share2 } from "lucide-react";
 
 // lucide-react@1.x has no brand icons — inline LinkedIn glyph.
 const LinkedinIcon = ({ className }: { className?: string }) => (
@@ -176,18 +176,11 @@ export const FluidActionPanel = ({ position = "top-right", className }: FluidAct
                   Connect on LinkedIn
                 </a>
                 <a
-                  href="mailto:tahayasser96@gmail.com"
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-black/10 bg-white/60 hover:bg-white hover:-translate-y-0.5 transition-all text-[11px] font-bold text-gray-700"
+                  href="mailto:Taha@qaysariya.com"
+                  className="col-span-2 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-black/10 bg-white/60 hover:bg-white hover:-translate-y-0.5 transition-all text-[11px] font-bold text-gray-700"
                 >
                   <Mail className="w-3.5 h-3.5" />
                   Email me
-                </a>
-                <a
-                  href="tel:+9647838291196"
-                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-black/10 bg-white/60 hover:bg-white hover:-translate-y-0.5 transition-all text-[11px] font-bold text-gray-700"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  Call
                 </a>
                 <button
                   onClick={handleCopyLink}

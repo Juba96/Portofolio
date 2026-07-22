@@ -108,6 +108,12 @@ function OverviewPage() {
           >
             Connect on LinkedIn
           </a>
+          <a
+            href="mailto:Taha@qaysariya.com"
+            className="px-5 py-2.5 rounded-full border border-gray-200 text-sm font-medium text-gray-700 hover:border-gray-400 transition-colors"
+          >
+            Taha@qaysariya.com
+          </a>
           <Link
             to="/"
             className="px-5 py-2.5 rounded-full border border-gray-200 text-sm font-medium text-gray-700 hover:border-gray-400 transition-colors"
