@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useAnimationControls } from "motion/react";
 import SmokeyCursor from "./lightswind/smokey-cursor";
 import { Iphone16Pro } from "./lightswind/iphone16-pro";
 import { FluidActionPanel } from "./lightswind/fluid-action-panel";
+import { askPortfolioChat } from "@/lib/api/chat.functions";
 
 type View = "me" | "projects" | "skills" | "fun" | "contact";
 
@@ -188,6 +189,9 @@ export function PortfolioApp() {
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
   const [showChat, setShowChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Conversation history sent to the Claude server function (multi-turn
+  // context). Kept in a ref: it's request payload, not render state.
+  const chatHistoryRef = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   // Desktop = precise hovering pointer. On touch devices the fluid cursor has
   // nothing to follow and only burns GPU/memory. (Component is client-only.)
@@ -243,16 +247,29 @@ export function PortfolioApp() {
     }, 40);
   };
 
-  const sendMessage = (text: string) => {
-    if (!text.trim() || isTyping) return;
+  const sendMessage = async (text: string) => {
+    const content = text.trim();
+    if (!content || isTyping) return;
     setShowChat(true);
-    const userMsg: Message = { id: Date.now(), role: "user", content: text.trim() };
-    const assistantId = Date.now() + 1;
-    const assistantMsg: Message = { id: assistantId, role: "assistant", content: "" };
-    setMessages((prev) => [...prev, userMsg, assistantMsg]);
+    // Typing dots show while the request is in flight; the assistant bubble is
+    // only added once the reply is ready (avoids an empty pill during the wait).
+    setIsTyping(true);
+    setMessages((prev) => [...prev, { id: Date.now(), role: "user", content }]);
     setInput("");
-    const answer = findAnswer(text.trim());
-    setTimeout(() => typeOutMessage(answer, assistantId), 350 + Math.random() * 250);
+    const history = [...chatHistoryRef.current, { role: "user" as const, content }];
+    // Real Claude reply via the server function; keyword matcher is the
+    // offline/no-key/error fallback so the chat always answers.
+    let answer: string;
+    try {
+      const res = await askPortfolioChat({ data: { messages: history.slice(-20) } });
+      answer = res.reply ?? findAnswer(content);
+    } catch {
+      answer = findAnswer(content);
+    }
+    chatHistoryRef.current = [...history, { role: "assistant", content: answer }];
+    const assistantId = Date.now() + 1;
+    setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "" }]);
+    typeOutMessage(answer, assistantId);
   };
 
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); sendMessage(input); };
@@ -261,6 +278,7 @@ export function PortfolioApp() {
     setView(v);
     setShowChat(false);
     setMessages([]);
+    chatHistoryRef.current = [];
     setInput("");
   };
 
