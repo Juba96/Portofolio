@@ -88,7 +88,8 @@ type ChatTurn = z.infer<typeof chatInput>["messages"][number];
 // makes it the primary provider for this low-traffic chat.
 async function askGemini(messages: ChatTurn[], apiKey: string): Promise<string | null> {
   const res = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+    // 2.5-flash is retired for new accounts; 3.5-flash is the current free-tier flash.
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent",
     {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
