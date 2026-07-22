@@ -88,8 +88,10 @@ export const askPortfolioChat = createServerFn({ method: "POST" })
     if (!process.env.ANTHROPIC_API_KEY) return { reply: null };
     try {
       const client = new Anthropic();
+      // Haiku: cheapest Claude tier ($1/$5 per MTok) — plenty for short
+      // profile Q&A, keeps cost at fractions of a cent per reply.
       const response = await client.messages.create({
-        model: "claude-opus-4-8",
+        model: "claude-haiku-4-5",
         max_tokens: 1024,
         system: SYSTEM_PROMPT,
         messages: data.messages,
