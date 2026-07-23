@@ -317,3 +317,15 @@ body {
   animation: float 5s ease-in-out infinite;
   filter: drop-shadow(0 20px 30px rgba(0,0,0,0.15));
 }
+
+/* Respect OS-level reduced-motion: stop the ambient float and minimize all
+   transition/animation churn (motion/react transitions become near-instant). */
+@media (prefers-reduced-motion: reduce) {
+  .avatar-float { animation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

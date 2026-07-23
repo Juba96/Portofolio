@@ -10,6 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { StructuredData } from "../components/StructuredData";
 import { reportHiggsfieldError } from "../lib/higgsfield-error-reporting";
 // Page metadata (browser <title>/favicon + social og: tags) committed into the
 // repo by the marketplace meta API and read at BUILD time — no runtime fetch.
@@ -105,7 +106,7 @@ function buildHead(meta: AppMeta) {
       { rel: "preconnect", href: "https://fonts.gstatic.com" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
       },
       ...(favicon ? [{ rel: "icon", href: favicon }] : []),
     ],
@@ -185,13 +186,40 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+// Person schema for search engines — module-level const, SSR'd on every page.
+const PERSON_JSON_LD = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Taha Yasir",
+  jobTitle: "AI Product Builder & Senior VAS Product Development Manager",
+  worksFor: { "@type": "Organization", name: "Al-Bawaba Telecom" },
+  address: { "@type": "PostalAddress", addressLocality: "Baghdad", addressCountry: "IQ" },
+  email: "mailto:Taha@qaysariya.com",
+  sameAs: ["https://www.linkedin.com/in/taha-algburi/"],
+});
+
+// Analytics is opt-in: set VITE_GA_MEASUREMENT_ID (e.g. G-XXXXXXX) in the
+// build environment (Railway variables) and rebuild; unset = no tracking code.
+const GA_ID = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
         <HeadContent />
+        {GA_ID && (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}');`,
+              }}
+            />
+          </>
+        )}
       </head>
       <body>
+        <StructuredData json={PERSON_JSON_LD} />
         {children}
         <Scripts />
       </body>

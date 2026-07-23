@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { GEMINI_MODEL, chatInput, geminiRequestBody } from "@/lib/api/chat-prompt";
+import { checkChatRequest } from "@/lib/api/rate-limit";
 
 // Streaming chat endpoint: proxies Gemini's SSE stream to the browser as plain
 // text chunks, so replies start rendering in ~0.5s instead of after the full
@@ -10,6 +11,9 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const rejected = checkChatRequest(request);
+        if (rejected) return rejected;
+
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) return new Response("LLM not configured", { status: 503 });
 

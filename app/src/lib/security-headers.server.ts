@@ -4,24 +4,21 @@
  */
 export function applySecurityHeaders(response: Response): Response {
   const headers = new Headers(response.headers);
-  // Framing: the Supercomputer Design-mode inspector + preview render this app
-  // cross-origin inside an iframe. The Higgsfield hosting platform injects the
-  // canonical `frame-ancestors` allowlist on every app response, so this app
-  // MUST NOT set its own — browsers intersect multiple CSP headers, so a second
-  // (stricter) list here can only ever subtract from the platform's allowlist
-  // and silently block the embed. We also deliberately do NOT set
-  // `X-Frame-Options` (no cross-origin allowlist; SAMEORIGIN/DENY would blank
-  // the preview) and leave framing entirely to the platform.
+  // Self-hosted on Railway (no platform-injected headers), so this app owns
+  // its full policy including framing: nobody should embed the portfolio.
+  // script-src allows googletagmanager for the env-gated GA4 snippet.
   headers.set(
     'Content-Security-Policy',
     "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline'; " +
+      "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; " +
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
       "font-src 'self' https://fonts.gstatic.com; " +
       "img-src 'self' data: https:; media-src 'self' https:; " +
       "connect-src 'self' https:; " +
-      "base-uri 'self'; form-action 'self'",
+      "base-uri 'self'; form-action 'self'; " +
+      "frame-ancestors 'self'",
   );
+  headers.set('X-Frame-Options', 'SAMEORIGIN');
   headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');

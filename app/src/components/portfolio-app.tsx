@@ -284,7 +284,12 @@ export function PortfolioApp() {
         showChunk(full);
       }
     } catch {
-      // Mid-stream failure: keep whatever already rendered, else fall back.
+      // Mid-stream failure: keep the partial but tell the visitor it was cut
+      // off (an empty result still falls through to the fallback below).
+      if (full.trim()) {
+        full += "\n\n… connection dropped — ask again to continue.";
+        showChunk(full);
+      }
     }
     if (!full.trim()) {
       if (assistantId !== null) {
@@ -441,7 +446,7 @@ export function PortfolioApp() {
           ) : (
             <button
               onClick={() => setShowQuickQuestions((s) => !s)}
-              className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1"
+              className="text-[10px] text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1"
             >
               {showQuickQuestions ? "Hide quick questions" : "Show quick questions"}
               <svg
@@ -544,7 +549,7 @@ export function PortfolioApp() {
           </div>
         </motion.form>
 
-        <p className="text-center text-[9px] text-gray-400 mt-3 tracking-wider uppercase">
+        <p className="text-center text-[9px] text-gray-500 mt-3 tracking-wider uppercase">
           Powered by AI
         </p>
       </footer>
@@ -626,13 +631,22 @@ function MeView() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
       >
-        <a
-          href="/overview"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full liquid-glass text-xs md:text-sm font-medium text-gray-700 hover:text-black transition-colors"
-        >
-          In a hurry? 60-second overview
-          <span aria-hidden>→</span>
-        </a>
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <a
+            href="/overview"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full liquid-glass text-xs md:text-sm font-medium text-gray-700 hover:text-black transition-colors"
+          >
+            In a hurry? 60-second overview
+            <span aria-hidden>→</span>
+          </a>
+          <a
+            href="/resume.pdf"
+            download="Taha-Yasir-Resume.pdf"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full liquid-glass text-xs md:text-sm font-medium text-gray-700 hover:text-black transition-colors"
+          >
+            Résumé PDF
+          </a>
+        </div>
       </motion.div>
     </div>
   );
@@ -744,7 +758,7 @@ function ProjectsView() {
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-[280px] text-center md:text-left"
           >
-            <div className="text-[10px] font-medium text-gray-400 uppercase tracking-widest mb-1">
+            <div className="text-[10px] font-medium text-gray-500 uppercase tracking-widest mb-1">
               {p.subtitle}
             </div>
             <h3 className="font-bold text-xl md:text-2xl mb-2">{p.title}</h3>
@@ -878,7 +892,7 @@ function ContactView() {
       >
         <div className="flex items-start justify-between mb-3">
           <h2 className="text-xl font-bold tracking-tight">Contacts</h2>
-          <span className="text-[11px] text-gray-400">@tahayasir</span>
+          <span className="text-[11px] text-gray-500">@tahayasir</span>
         </div>
 
         <motion.a
@@ -939,7 +953,7 @@ function ChatView({
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
-    <div className="h-[55vh] flex flex-col">
+    <div className="h-[55dvh] flex flex-col">
       <div className="flex-1 overflow-y-auto space-y-3 px-1">
         <AnimatePresence mode="popLayout">
           {messages.map((msg) => (

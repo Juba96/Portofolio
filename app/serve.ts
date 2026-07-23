@@ -7,9 +7,10 @@
 // This wrapper serves static files from dist/client and falls through to the
 // SSR handler for everything else — mirroring what the Cloudflare ASSETS
 // binding did in the original Workers deploy target.
-import { join, normalize } from "node:path";
+import { join, normalize, sep } from "node:path";
 
 import server from "./dist/server/server.js";
+import { applySecurityHeaders } from "./src/lib/security-headers.server";
 
 const CLIENT_DIR = join(import.meta.dir, "dist", "client");
 const port = Number(process.env.PORT ?? 3000);
@@ -25,7 +26,7 @@ Bun.serve({
 
     if (pathname !== "/" && !pathname.includes("\0")) {
       const filePath = normalize(join(CLIENT_DIR, pathname));
-      if (filePath.startsWith(CLIENT_DIR)) {
+      if (filePath.startsWith(CLIENT_DIR + sep)) {
         const file = Bun.file(filePath);
         if (await file.exists()) {
           // Vite content-hashed bundles (e.g. index-B8hOm5xi.js) are immutable
@@ -33,13 +34,15 @@ Bun.serve({
           // of caching plus a week of stale-while-revalidate so replacing a
           // file doesn't strand visitors on year-old copies.
           const hashed = /-[A-Za-z0-9_-]{8,}\.\w+$/.test(pathname);
-          return new Response(file, {
-            headers: {
-              "cache-control": hashed
-                ? "public, max-age=31536000, immutable"
-                : "public, max-age=86400, stale-while-revalidate=604800",
-            },
-          });
+          return applySecurityHeaders(
+            new Response(file, {
+              headers: {
+                "cache-control": hashed
+                  ? "public, max-age=31536000, immutable"
+                  : "public, max-age=86400, stale-while-revalidate=604800",
+              },
+            }),
+          );
         }
       }
     }

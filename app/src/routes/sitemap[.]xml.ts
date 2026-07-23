@@ -15,6 +15,12 @@ export const Route = createFileRoute('/sitemap.xml')({
           '    <changefreq>weekly</changefreq>',
           '    <priority>1.0</priority>',
           '  </url>',
+          '  <url>',
+          `    <loc>${origin}/overview</loc>`,
+          `    <lastmod>${today}</lastmod>`,
+          '    <changefreq>weekly</changefreq>',
+          '    <priority>0.9</priority>',
+          '  </url>',
           '</urlset>',
         ].join('\n')
         return new Response(xml, {

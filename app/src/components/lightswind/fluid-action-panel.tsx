@@ -49,15 +49,24 @@ export const FluidActionPanel = ({ position = "top-right", className }: FluidAct
     }
   }, [isOpen]);
 
-  // Close on click outside
+  // Close on click outside or Escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-    if (isOpen) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isOpen]);
 
   const handleCopyLink = () => {
@@ -146,7 +155,7 @@ export const FluidActionPanel = ({ position = "top-right", className }: FluidAct
               className="w-[320px] px-4 pb-4 flex flex-col gap-3 text-left"
             >
               <motion.div variants={itemVariants} className="flex flex-col gap-0.5 border-b border-black/5 pb-2">
-                <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase">About</span>
+                <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase">About</span>
                 <span className="text-sm font-bold text-gray-800">Taha Yasir — AI Portfolio</span>
               </motion.div>
 
@@ -201,7 +210,7 @@ export const FluidActionPanel = ({ position = "top-right", className }: FluidAct
               </motion.div>
 
               <motion.div variants={itemVariants} className="border-t border-black/5 pt-2">
-                <p className="text-[10px] text-gray-400 text-center">© 2026 Taha Yasir. All rights reserved.</p>
+                <p className="text-[10px] text-gray-500 text-center">© 2026 Taha Yasir. All rights reserved.</p>
               </motion.div>
             </motion.div>
           )}

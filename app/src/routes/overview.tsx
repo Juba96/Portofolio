@@ -7,7 +7,16 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/overview")({
   head: () => ({
-    meta: [{ title: "Taha Yasir — Overview" }],
+    meta: [
+      { title: "Taha Yasir — Overview" },
+      {
+        name: "description",
+        content:
+          "One-page overview of Taha Yasir — AI Product Builder & Senior VAS Product Manager. Products, experience, skills, and contact in a 60-second scroll.",
+      },
+      { property: "og:title", content: "Taha Yasir — Overview" },
+    ],
+    links: [{ rel: "canonical", href: "https://portofolio-production-eb63.up.railway.app/overview" }],
   }),
   component: OverviewPage,
 });
@@ -80,7 +89,8 @@ function OverviewPage() {
   return (
     // html/body are overflow:hidden globally (the interactive app is a fixed
     // viewport) — this page scrolls inside its own full-height container.
-    <div className="h-dvh w-full overflow-y-auto bg-white text-black">
+    // print: variants let the same page render as the PDF résumé.
+    <div className="h-dvh w-full overflow-y-auto bg-white text-black print:h-auto print:overflow-visible">
       <div className="mx-auto max-w-3xl px-5 py-10 md:py-14">
         {/* Header */}
         <header className="flex items-center gap-5">
@@ -95,11 +105,15 @@ function OverviewPage() {
               AI Product Builder · Senior VAS &amp; Product Development Manager
             </p>
             <p className="text-xs md:text-sm text-gray-400 mt-1">Baghdad, Iraq · MENA-wide</p>
+            {/* Print/PDF only — the interactive buttons are hidden in print */}
+            <p className="hidden print:block text-xs text-gray-600 mt-1">
+              Taha@qaysariya.com · linkedin.com/in/taha-algburi
+            </p>
           </div>
         </header>
 
         {/* Actions */}
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="mt-5 flex flex-wrap gap-2 print:hidden">
           <a
             href="https://www.linkedin.com/in/taha-algburi/"
             target="_blank"
@@ -113,6 +127,13 @@ function OverviewPage() {
             className="px-5 py-2.5 rounded-full border border-gray-200 text-sm font-medium text-gray-700 hover:border-gray-400 transition-colors"
           >
             Taha@qaysariya.com
+          </a>
+          <a
+            href="/resume.pdf"
+            download="Taha-Yasir-Resume.pdf"
+            className="px-5 py-2.5 rounded-full border border-gray-200 text-sm font-medium text-gray-700 hover:border-gray-400 transition-colors"
+          >
+            Download résumé (PDF)
           </a>
           <Link
             to="/"
@@ -216,7 +237,7 @@ function OverviewPage() {
         </section>
 
         {/* Footer CTA */}
-        <footer className="mt-12 pt-6 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+        <footer className="mt-12 pt-6 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <p className="text-[13px] text-gray-500">
             Want the full experience? Try the AI-powered interactive portfolio.
           </p>

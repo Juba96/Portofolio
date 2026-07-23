@@ -1,5 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
+
+import { checkChatRequest } from "./rate-limit";
 
 import {
   GEMINI_MODEL,
@@ -53,6 +56,10 @@ async function askClaude(messages: ChatTurn[]): Promise<string | null> {
 export const askPortfolioChat = createServerFn({ method: "POST" })
   .inputValidator(chatInput)
   .handler(async ({ data }) => {
+    // Same abuse guard as /api/chat — server functions are public HTTP
+    // endpoints too. A rejected request degrades to the keyword fallback.
+    if (checkChatRequest(getRequest())) return { reply: null };
+
     // Provider chain: Gemini (free tier) → Claude Haiku (if key set) →
     // { reply: null }, which the client turns into the keyword fallback.
     if (process.env.GEMINI_API_KEY) {
