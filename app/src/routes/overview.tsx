@@ -16,7 +16,7 @@ export const Route = createFileRoute("/overview")({
       },
       { property: "og:title", content: "Taha Yasir — Overview" },
     ],
-    links: [{ rel: "canonical", href: "https://portofolio-production-eb63.up.railway.app/overview" }],
+    links: [{ rel: "canonical", href: "https://taha.qaysariya.com/overview" }],
   }),
   component: OverviewPage,
 });

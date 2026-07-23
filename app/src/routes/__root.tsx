@@ -64,12 +64,21 @@ function toOwnAssetUrl(value: string | null | undefined): string | null {
   }
 }
 
+// Canonical public origin — used to absolutize og: URLs (social scrapers
+// don't reliably resolve root-relative image paths).
+const SITE_ORIGIN = "https://taha.qaysariya.com";
+
+function absolutize(value: string | null): string | null {
+  if (value && value.startsWith("/")) return SITE_ORIGIN + value;
+  return value;
+}
+
 function buildHead(meta: AppMeta) {
   const title = meta.og_title ?? DEFAULT_TITLE;
   const description = meta.og_description ?? DEFAULT_DESCRIPTION;
-  const ogImage = toOwnAssetUrl(meta.og_image_url);
+  const ogImage = absolutize(toOwnAssetUrl(meta.og_image_url));
   const favicon = toOwnAssetUrl(meta.favicon_url);
-  const ogVideo = toOwnAssetUrl(meta.og_video_url);
+  const ogVideo = absolutize(toOwnAssetUrl(meta.og_video_url));
 
   return {
     meta: [
@@ -191,6 +200,7 @@ const PERSON_JSON_LD = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "Person",
   name: "Taha Yasir",
+  url: "https://taha.qaysariya.com",
   jobTitle: "AI Product Builder & Senior VAS Product Development Manager",
   worksFor: { "@type": "Organization", name: "Al-Bawaba Telecom" },
   address: { "@type": "PostalAddress", addressLocality: "Baghdad", addressCountry: "IQ" },

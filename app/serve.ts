@@ -22,6 +22,14 @@ Bun.serve({
   hostname: "0.0.0.0",
   async fetch(request) {
     const url = new URL(request.url);
+
+    // Canonical host: permanently redirect the *.up.railway.app address to
+    // the custom domain so search engines and shared links converge on one URL.
+    const host = request.headers.get("host") ?? url.hostname;
+    if (host.endsWith(".up.railway.app")) {
+      return Response.redirect(`https://taha.qaysariya.com${url.pathname}${url.search}`, 301);
+    }
+
     const pathname = decodeURIComponent(url.pathname);
 
     if (pathname !== "/" && !pathname.includes("\0")) {
