@@ -1,13 +1,34 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence, useAnimationControls } from "motion/react";
 import SmokeyCursor from "./lightswind/smokey-cursor";
 import { Iphone16Pro } from "./lightswind/iphone16-pro";
 import { FluidActionPanel } from "./lightswind/fluid-action-panel";
 import { askPortfolioChat } from "@/lib/api/chat.functions";
+import { submitLead } from "@/lib/api/leads.functions";
+import type { Project, SiteContent } from "@/content/schema";
 
 type View = "me" | "projects" | "skills" | "fun" | "contact";
+
+// ---- Analytics (GA4) ----------------------------------------------------
+// gtag ships only when VITE_GA_MEASUREMENT_ID is set at build; these helpers
+// no-op otherwise. Never send message text or personal data.
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
+function track(name: string, params?: Record<string, string>) {
+  if (typeof window !== "undefined") window.gtag?.("event", name, params ?? {});
+}
+
+// Virtual page view: the SPA keeps one URL, but GA page reports (incl.
+// Realtime "Pages") should split by section — /projects, /skills, /chat …
+function trackVirtualPage(path: string, title: string) {
+  track("page_view", { page_path: path, page_title: title });
+}
 
 type Message = {
   id: number;
@@ -15,6 +36,8 @@ type Message = {
   content: string;
 };
 
+// Static fallback answers (used when the LLM is unreachable). Entries that
+// depend on editable content are overridden per-render in PortfolioApp.
 const knowledgeBase: { [key: string]: string } = {
   "who": "I'm Taha Yasir — an AI product builder with deep telecom roots. By day I'm Senior VAS & Product Development Manager working with Tier-1 operators across Iraq, Saudi Arabia, UAE, and Algeria; through Qaysariya, my product studio, I design and ship AI products end-to-end.",
   "about": "Based in Baghdad, I specialize in partner relationship management, technical integrations, and scalable platform delivery across E-Sports, Music, Video, Gaming, Fitness, and E-Learning.",
@@ -48,12 +71,30 @@ const knowledgeBase: { [key: string]: string } = {
   "default": "I can answer questions about Taha's work, projects, skills, and experience. Try asking about his projects or telecom experience.",
 };
 
-function findAnswer(question: string): string {
+function findAnswerIn(kb: { [key: string]: string }, question: string): string {
   const q = question.toLowerCase().trim();
-  for (const key of Object.keys(knowledgeBase)) {
-    if (q.includes(key)) return knowledgeBase[key];
+  for (const key of Object.keys(kb)) {
+    if (q.includes(key)) return kb[key];
   }
-  return knowledgeBase["default"];
+  return kb["default"];
+}
+
+// Content-derived overrides so offline answers stay in sync with /admin edits.
+function contentKnowledge(c: SiteContent): { [key: string]: string } {
+  const projectsLine = c.projects.map((p) => `${p.title} (${p.subtitle})`).join(", ");
+  return {
+    "experience": c.experience
+      .map((e) => `${e.role} at ${e.org} (${e.period}).`)
+      .join(" "),
+    "projects": `I've built ${c.projects.length} products under Qaysariya Studio: ${projectsLine}.`,
+    "products": `Products through Qaysariya: ${c.projects.map((p) => p.title).join(", ")}.`,
+    "skills": `Key strengths: ${c.skillCategories.flatMap((s) => s.skills).join(", ")}. ${c.languages.join(", ").replace(/🇮🇶 |🇬🇧 /g, "")}.`,
+    "contact": `📧 ${c.contact.email}\n🔗 ${c.contact.linkedin.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}\n📍 ${c.contact.location}`,
+    "email": `You can email me at ${c.contact.email} — or connect on LinkedIn: ${c.contact.linkedin}`,
+    "phone": `I keep calls off the site — email me at ${c.contact.email} or connect on LinkedIn (${c.contact.linkedin}) and we can take it from there.`,
+    "location": `${c.contact.location} 🇮🇶`,
+    "education": c.education.join(". "),
+  };
 }
 
 const suggestedQuestions = [
@@ -63,75 +104,6 @@ const suggestedQuestions = [
   "How can I contact you?",
 ];
 
-type Project = {
-  title: string;
-  subtitle: string;
-  icon: string;
-  color: string;
-  desc: string;
-  // App screens shown inside the iPhone frame; multiple screens auto-cycle.
-  screens: string[];
-  // Pushes the screen image down inside the frame (SVG units) when the
-  // screenshot's content starts at the very top (would hide under the island).
-  screenInsetTop?: number;
-  // Hide the frame's drawn island/camera when the screenshots already have
-  // their own Dynamic Island baked in (e.g. Ramba's studio captures).
-  frameIsland?: boolean;
-};
-
-const projects: Project[] = [
-  {
-    title: "QuizQ",
-    subtitle: "Gamified Trivia App",
-    icon: "🎮",
-    color: "from-[#C21F2E] to-[#7a1020]",
-    desc: "Arabic-first trivia game — timed questions, monthly leaderboards, and real prizes like phones and cash, with game tokens paid via carrier billing.",
-    screens: [
-      "/assets/quizq/screens/home-light.png",
-      "/assets/quizq/screens/game-light.png",
-      "/assets/quizq/screens/prizes-light.png",
-    ],
-    screenInsetTop: 60,
-  },
-  {
-    title: "Ramba",
-    subtitle: "Car-Wash Platform",
-    icon: "🚗",
-    color: "from-emerald-500 to-teal-600",
-    desc: "Car-wash subscriptions for Iraq — wash plans, live queue tracking with Dynamic Island updates, nearby partner shops, and mobile-wallet payments.",
-    screens: [
-      "/assets/ramba/screens/home.png",
-      "/assets/ramba/screens/queue.png",
-      "/assets/ramba/screens/washing.png",
-    ],
-    frameIsland: false,
-  },
-  {
-    title: "OoredooAI",
-    subtitle: "Telco AI Assistant",
-    icon: "🤖",
-    color: "from-rose-500 to-pink-600",
-    desc: "AI assistant for Ooredoo subscribers — bilingual chat, balance and data queries, image generation, and daily or weekly plans billed straight to phone credit.",
-    screens: [
-      "/assets/ooredooai/screens/chat.png",
-      "/assets/ooredooai/screens/balance.png",
-      "/assets/ooredooai/screens/plans.png",
-    ],
-    frameIsland: false,
-  },
-];
-
-const skillCategories = [
-  { name: "Product & Partnerships", icon: "🤝", skills: ["Partner Development", "Account Management", "Product Strategy", "Stakeholder Management", "Project Delivery"] },
-  { name: "Telecom & VAS", icon: "📡", skills: ["Direct Carrier Billing", "Subscription Management", "USSD / SMS / WhatsApp", "Tier-1 Integrations", "Revenue Optimization"] },
-  { name: "Technology", icon: "⚡", skills: ["API Integrations", "PWA Development", "AI Product Design", "Payment Systems", "Mobile Payments"] },
-];
-
-const funItems = [
-  { title: "Side Projects", desc: "Always building something new — from AI tools to mini apps", icon: "🛠️" },
-  { title: "MENA Startup Scene", desc: "Passionate about the growing tech ecosystem across the Middle East", icon: "🚀" },
-  { title: "AI Exploration", desc: "Constantly experimenting with new AI models and workflows", icon: "🧪" },
-];
 
 const navItems: { id: View; label: string; iconColor: string }[] = [
   { id: "me", label: "Me", iconColor: "#14b8a6" },
@@ -181,8 +153,14 @@ const NavIcon = ({ view, color }: { view: View; color: string }) => {
   return icons[view];
 };
 
-export function PortfolioApp() {
+export function PortfolioApp({ content }: { content: SiteContent }) {
   const [view, setView] = useState<View>("me");
+  // Offline keyword answers, with content-derived entries overriding statics.
+  const kb = useMemo(
+    () => ({ ...knowledgeBase, ...contentKnowledge(content) }),
+    [content],
+  );
+  const findAnswer = (q: string) => findAnswerIn(kb, q);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -217,7 +195,7 @@ export function PortfolioApp() {
   // switcher and its auto-cycle never show a loading pop-in.
   useEffect(() => {
     const prefetch = () => {
-      for (const p of projects) {
+      for (const p of content.projects) {
         for (const src of p.screens) {
           const img = new Image();
           img.src = src;
@@ -306,6 +284,8 @@ export function PortfolioApp() {
     const content = text.trim();
     if (!content || isTyping) return;
     setShowChat(true);
+    track("chat_message", { source: suggestedQuestions.includes(content) ? "chip" : "typed" });
+    trackVirtualPage("/chat", "Chat");
     // Typing dots show while the request is in flight; the assistant bubble
     // appears with the first streamed chunk (or the fallback answer).
     setIsTyping(true);
@@ -353,6 +333,7 @@ export function PortfolioApp() {
     setMessages([]);
     chatHistoryRef.current = [];
     setInput("");
+    trackVirtualPage(v === "me" ? "/" : `/${v}`, v);
   };
 
   return (
@@ -387,7 +368,7 @@ export function PortfolioApp() {
       </div>
 
       {/* Info hub — morphing fluid action panel (replaces the old i-button modal) */}
-      <FluidActionPanel position="top-right" />
+      <FluidActionPanel position="top-right" contact={content.contact} />
 
       {/* Main content area. Mobile: scrollable so no view ever clips (m-auto
           keeps short content centered); desktop: fixed, centered. */}
@@ -402,11 +383,11 @@ export function PortfolioApp() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-2xl m-auto py-3 md:py-0"
             >
-              {view === "me" && <MeView />}
-              {view === "projects" && <ProjectsView />}
-              {view === "skills" && <SkillsView />}
-              {view === "fun" && <FunView />}
-              {view === "contact" && <ContactView />}
+              {view === "me" && <MeView hero={content.hero} />}
+              {view === "projects" && <ProjectsView projects={content.projects.filter((p) => p.screens.length > 0)} />}
+              {view === "skills" && <SkillsView skillCategories={content.skillCategories} languages={content.languages} />}
+              {view === "fun" && <FunView funItems={content.funItems} />}
+              {view === "contact" && <ContactView contact={content.contact} />}
             </motion.div>
           )}
 
@@ -560,7 +541,11 @@ export function PortfolioApp() {
 
 /* ---------- Views ---------- */
 
-function MeView() {
+function MeView({ hero }: { hero: SiteContent["hero"] }) {
+  // Preserve the bold name styling when the greeting contains "Taha".
+  const [greetPre, greetPost] = hero.greeting.includes("Taha")
+    ? hero.greeting.split(/Taha(.*)/s)
+    : [hero.greeting, undefined];
   return (
     <div className="text-center">
       {/* Y logo */}
@@ -586,7 +571,15 @@ function MeView() {
         transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         className="text-sm md:text-base mb-2 text-gray-700 font-medium"
       >
-        Hey, I'm <span className="font-semibold text-black">Taha</span> 👋
+        {greetPost !== undefined ? (
+          <>
+            {greetPre}
+            <span className="font-semibold text-black">Taha</span>
+            {greetPost}
+          </>
+        ) : (
+          hero.greeting
+        )}
       </motion.p>
 
       <motion.h1
@@ -595,7 +588,7 @@ function MeView() {
         transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-2 md:mb-4 leading-tight"
       >
-        AI Product Builder
+        {hero.title}
       </motion.h1>
 
       <motion.p
@@ -604,7 +597,7 @@ function MeView() {
         transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
         className="text-xs md:text-sm text-gray-500 mb-6 max-w-[300px] md:max-w-none mx-auto leading-relaxed [text-wrap:balance]"
       >
-        Senior VAS &amp; Product Development Manager · 7+ years in telecom across MENA
+        {hero.subtitle}
       </motion.p>
 
       <motion.div
@@ -642,6 +635,7 @@ function MeView() {
           <a
             href="/resume.pdf"
             download="Taha-Yasir-Resume.pdf"
+            onClick={() => track("resume_download")}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full liquid-glass text-xs md:text-sm font-medium text-gray-700 hover:text-black transition-colors"
           >
             Résumé PDF
@@ -652,12 +646,16 @@ function MeView() {
   );
 }
 
-function ProjectsView() {
+function ProjectsView({ projects }: { projects: Project[] }) {
   const [active, setActive] = useState(0);
   const [screenIdx, setScreenIdx] = useState(0);
   const p = projects[active];
   const goTo = (dir: number) =>
     setActive((a) => (a + dir + projects.length) % projects.length);
+
+  useEffect(() => {
+    track("project_view", { project: projects[active]?.title ?? "" });
+  }, [active, projects]);
 
   // Slide/rotate pulse on the persistent phone when the active app changes.
   const phoneControls = useAnimationControls();
@@ -786,7 +784,13 @@ function ProjectsView() {
   );
 }
 
-function SkillsView() {
+function SkillsView({
+  skillCategories,
+  languages,
+}: {
+  skillCategories: SiteContent["skillCategories"];
+  languages: string[];
+}) {
   return (
     <div className="max-w-xl mx-auto">
       <motion.h2
@@ -833,14 +837,17 @@ function SkillsView() {
         transition={{ duration: 0.5, delay: 0.6 }}
         className="mt-6 flex items-center justify-center gap-2.5 text-[11px] text-gray-500"
       >
-        <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">🇮🇶 Arabic — Native</span>
-        <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">🇬🇧 English — Professional</span>
+        {languages.map((lang) => (
+          <span key={lang} className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
+            {lang}
+          </span>
+        ))}
       </motion.div>
     </div>
   );
 }
 
-function FunView() {
+function FunView({ funItems }: { funItems: SiteContent["funItems"] }) {
   return (
     <div className="max-w-xl mx-auto">
       <motion.h2
@@ -881,7 +888,7 @@ function FunView() {
   );
 }
 
-function ContactView() {
+function ContactView({ contact }: { contact: SiteContent["contact"] }) {
   return (
     <div className="max-w-md mx-auto">
       <motion.div
@@ -896,13 +903,14 @@ function ContactView() {
         </div>
 
         <motion.a
-          href="mailto:Taha@qaysariya.com"
+          href={`mailto:${contact.email}`}
+          onClick={() => track("email_click")}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
           className="text-blue-500 font-medium text-sm hover:text-blue-600 transition-colors inline-flex items-center gap-1 mb-6"
         >
-          Taha@qaysariya.com
+          {contact.email}
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -917,11 +925,8 @@ function ContactView() {
           {["Email", "LinkedIn"].map((s) => (
             <a
               key={s}
-              href={
-                s === "Email"
-                  ? "mailto:Taha@qaysariya.com"
-                  : "https://www.linkedin.com/in/taha-algburi/"
-              }
+              href={s === "Email" ? `mailto:${contact.email}` : contact.linkedin}
+              onClick={() => track(s === "Email" ? "email_click" : "linkedin_click")}
               {...(s === "LinkedIn" ? { target: "_blank", rel: "noreferrer" } : {})}
               className="text-[12px] text-gray-500 hover:text-gray-800 transition-colors"
             >
@@ -930,6 +935,9 @@ function ContactView() {
           ))}
         </motion.div>
       </motion.div>
+
+      {/* Lead form — writes to contact_messages via the rate-limited server fn */}
+      <LeadForm />
 
       <motion.p
         initial={{ opacity: 0 }}
@@ -940,6 +948,87 @@ function ContactView() {
         You can reach me super easily! Just hit me up via:
       </motion.p>
     </div>
+  );
+}
+
+function LeadForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (state === "sending" || state === "sent") return;
+    setState("sending");
+    try {
+      const res = await submitLead({ data: { name, email, message } });
+      setState(res.ok ? "sent" : "error");
+      if (res.ok) track("lead_submitted");
+    } catch {
+      setState("error");
+    }
+  };
+
+  const field =
+    "w-full rounded-xl border border-black/10 bg-white/70 px-3.5 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:border-black/25 transition-colors";
+
+  return (
+    <motion.form
+      onSubmit={handleSubmit}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+      className="bg-white rounded-2xl p-6 border border-black/10 shadow-[0_4px_20px_-6px_rgba(0,0,0,0.08)] mt-4 text-left"
+    >
+      <h3 className="text-sm font-bold tracking-tight mb-3">Or leave me a message</h3>
+      {state === "sent" ? (
+        <p className="text-sm text-gray-600 py-2">
+          Thanks! I got your message and I'll get back to you soon. 🙌
+        </p>
+      ) : (
+        <div className="space-y-2.5">
+          <input
+            className={field}
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            maxLength={200}
+          />
+          <input
+            className={field}
+            type="email"
+            placeholder="Your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            maxLength={320}
+          />
+          <textarea
+            className={`${field} resize-none`}
+            placeholder="What can I help you with?"
+            rows={3}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            required
+            maxLength={4000}
+          />
+          <button
+            type="submit"
+            disabled={state === "sending"}
+            className="w-full py-2.5 rounded-xl bg-black text-white text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
+          >
+            {state === "sending" ? "Sending…" : "Send message"}
+          </button>
+          {state === "error" && (
+            <p className="text-xs text-red-500">
+              Couldn't send right now — please email me instead.
+            </p>
+          )}
+        </div>
+      )}
+    </motion.form>
   );
 }
 

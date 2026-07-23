@@ -1,12 +1,39 @@
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
-// Starter table: messages sent from the portfolio's contact section.
-// Add further tables here, then run `bun run db:push` (dev) or
+// Run `bun run db:push` after changing this file (dev) or
 // `bun run db:generate` + `bun run db:migrate` (versioned migrations).
+
+// Leads — from the contact form ('form') or detected in AI chat ('chat').
+// status drives the follow-up workflow in /admin: new → contacted → closed.
 export const contactMessages = pgTable("contact_messages", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull(),
   message: text("message").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("new"),
+  source: varchar("source", { length: 20 }).notNull().default("form"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Every AI-chat exchange (anonymous — no IPs or identities stored).
+export const chatLogs = pgTable("chat_logs", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  provider: varchar("provider", { length: 20 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Singleton editable site content (id always 1). Shape = siteContentSchema.
+export const siteContent = pgTable("site_content", {
+  id: integer("id").primaryKey(),
+  data: jsonb("data").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Rollback safety net: previous content versions (trimmed to the last 20).
+export const contentRevisions = pgTable("content_revisions", {
+  id: serial("id").primaryKey(),
+  data: jsonb("data").notNull(),
+  savedAt: timestamp("saved_at", { withTimezone: true }).notNull().defaultNow(),
 });

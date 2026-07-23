@@ -24,6 +24,7 @@ export interface FluidActionPanelProps {
   className?: string;
   onThemeToggle?: () => void;
   isDark?: boolean;
+  contact?: { email: string; linkedin: string; location: string };
 }
 
 const ABOUT_ROWS = [
@@ -32,7 +33,15 @@ const ABOUT_ROWS = [
   { icon: "💼", title: "Qaysariya Studio", desc: "Independent product studio building AI-powered products for MENA markets." },
 ];
 
-export const FluidActionPanel = ({ position = "top-right", className }: FluidActionPanelProps) => {
+export const FluidActionPanel = ({
+  position = "top-right",
+  className,
+  contact = {
+    email: "Taha@qaysariya.com",
+    linkedin: "https://www.linkedin.com/in/taha-algburi/",
+    location: "Baghdad, Iraq",
+  },
+}: FluidActionPanelProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -176,7 +185,7 @@ export const FluidActionPanel = ({ position = "top-right", className }: FluidAct
               {/* Quick actions */}
               <motion.div variants={itemVariants} className="grid grid-cols-2 gap-2">
                 <a
-                  href="https://www.linkedin.com/in/taha-algburi/"
+                  href={contact.linkedin}
                   target="_blank"
                   rel="noreferrer"
                   className="col-span-2 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-black/10 bg-white/60 hover:bg-white hover:-translate-y-0.5 transition-all text-[11px] font-bold text-gray-700"
@@ -185,7 +194,7 @@ export const FluidActionPanel = ({ position = "top-right", className }: FluidAct
                   Connect on LinkedIn
                 </a>
                 <a
-                  href="mailto:Taha@qaysariya.com"
+                  href={`mailto:${contact.email}`}
                   className="col-span-2 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-black/10 bg-white/60 hover:bg-white hover:-translate-y-0.5 transition-all text-[11px] font-bold text-gray-700"
                 >
                   <Mail className="w-3.5 h-3.5" />

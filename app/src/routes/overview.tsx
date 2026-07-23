@@ -1,11 +1,15 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 
+import { fetchSiteContent } from "../lib/api/content.functions";
+
 // Zero-click scannable overview — the recruiter fast lane. Everything worth
 // knowing in one scroll: summary, projects, experience, skills, education,
 // contact. Server-rendered (no ClientOnly, no motion) so it paints instantly
-// and reads well for crawlers too.
+// and reads well for crawlers too. All copy comes from the editable site
+// content (loader), so /admin edits appear without a redeploy.
 
 export const Route = createFileRoute("/overview")({
+  loader: () => fetchSiteContent(),
   head: () => ({
     meta: [
       { title: "Taha Yasir — Overview" },
@@ -21,71 +25,13 @@ export const Route = createFileRoute("/overview")({
   component: OverviewPage,
 });
 
-const projects = [
-  {
-    title: "QuizQ",
-    tag: "Gamified Trivia · DCB",
-    desc: "Arabic-first speed-quiz PWA with real prizes; game tokens paid via Direct Carrier Billing. Claude Partner Network POC, prepared for launch on Zain Iraq.",
-    screen: "/assets/quizq/screens/home-light.png",
-    icon: "🎮",
-  },
-  {
-    title: "Ramba",
-    tag: "Subscriptions · Payments",
-    desc: "Car-wash subscription platform for Iraq — plans redeemable across partner shops, live queue tracking, Wayl payments with FIB / ZainCash settlement.",
-    screen: "/assets/ramba/screens/home.png",
-    icon: "🚗",
-  },
-  {
-    title: "OoredooAI",
-    tag: "Telco AI · VAS",
-    desc: "AI-powered VAS & customer-acquisition engine — MVP delivered to Ooredoo Tunisia and Algeria. Bilingual chat, balance queries, plans billed to phone credit.",
-    screen: "/assets/ooredooai/screens/chat.png",
-    icon: "🤖",
-  },
-  {
-    title: "Voyalla",
-    tag: "GenAI · Travel Content",
-    desc: "AI-driven travel content app generating cinematic destination media with generative video, voice, and character-driven storytelling.",
-    screen: null,
-    icon: "✈️",
-  },
-];
-
-const experience = [
-  {
-    period: "2022 — Present",
-    role: "Senior VAS & Product Development Manager",
-    org: "Al-Bawaba Telecom",
-    desc: "Partner onboarding, technical integrations, and SLM frameworks with Tier-1 operators across Iraq, Saudi Arabia, UAE, and Algeria. Led the Ooredoo Algeria Mega Promo launch and the Khalaspay carrier-billing integration.",
-  },
-  {
-    period: "2022 — Present",
-    role: "Founder",
-    org: "Qaysariya Studio",
-    desc: "Independent product studio designing and shipping AI-directed, monetized digital products for MENA markets end-to-end — QuizQ, Ramba, OoredooAI, Voyalla.",
-  },
-  {
-    period: "2018 — 2022",
-    role: "IT Engineer",
-    org: "Metco (supporting Zain Iraq)",
-    desc: "Telecom infrastructure and enterprise support for one of Iraq's largest operators.",
-  },
-];
-
-const skills = [
-  "Direct Carrier Billing",
-  "VAS & Subscription Management",
-  "Partner Development",
-  "Mobile Payments",
-  "API Integrations & Onboarding",
-  "AI Product Development",
-  "Stakeholder Management",
-  "Project Delivery",
-  "Arabic (native) · English (professional)",
-];
+function trackEvent(name: string) {
+  if (typeof window !== "undefined") window.gtag?.("event", name, {});
+}
 
 function OverviewPage() {
+  const c = Route.useLoaderData();
+  const linkedinLabel = c.contact.linkedin.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
   return (
     // html/body are overflow:hidden globally (the interactive app is a fixed
     // viewport) — this page scrolls inside its own full-height container.
@@ -102,12 +48,12 @@ function OverviewPage() {
           <div className="min-w-0">
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Taha Yasir</h1>
             <p className="text-sm md:text-base text-gray-600 mt-1">
-              AI Product Builder · Senior VAS &amp; Product Development Manager
+              {c.hero.title} · {c.experience[0]?.role}
             </p>
-            <p className="text-xs md:text-sm text-gray-400 mt-1">Baghdad, Iraq · MENA-wide</p>
+            <p className="text-xs md:text-sm text-gray-400 mt-1">{c.contact.location} · MENA-wide</p>
             {/* Print/PDF only — the interactive buttons are hidden in print */}
             <p className="hidden print:block text-xs text-gray-600 mt-1">
-              Taha@qaysariya.com · linkedin.com/in/taha-algburi
+              {c.contact.email} · {linkedinLabel}
             </p>
           </div>
         </header>
@@ -115,22 +61,25 @@ function OverviewPage() {
         {/* Actions */}
         <div className="mt-5 flex flex-wrap gap-2 print:hidden">
           <a
-            href="https://www.linkedin.com/in/taha-algburi/"
+            href={c.contact.linkedin}
             target="_blank"
             rel="noreferrer"
+            onClick={() => trackEvent("linkedin_click")}
             className="px-5 py-2.5 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors"
           >
             Connect on LinkedIn
           </a>
           <a
-            href="mailto:Taha@qaysariya.com"
+            href={`mailto:${c.contact.email}`}
+            onClick={() => trackEvent("email_click")}
             className="px-5 py-2.5 rounded-full border border-gray-200 text-sm font-medium text-gray-700 hover:border-gray-400 transition-colors"
           >
-            Taha@qaysariya.com
+            {c.contact.email}
           </a>
           <a
             href="/resume.pdf"
             download="Taha-Yasir-Resume.pdf"
+            onClick={() => trackEvent("resume_download")}
             className="px-5 py-2.5 rounded-full border border-gray-200 text-sm font-medium text-gray-700 hover:border-gray-400 transition-colors"
           >
             Download résumé (PDF)
@@ -145,10 +94,7 @@ function OverviewPage() {
 
         {/* Summary */}
         <p className="mt-8 text-[15px] leading-relaxed text-gray-700 [text-wrap:pretty]">
-          7+ years shipping carrier billing, VAS, and AI products across MENA with Tier-1
-          operators (Ooredoo, Zain, Khalaspay). I manage partner ecosystems and technical
-          integrations by day, and design, build, and launch AI products end-to-end through my
-          studio, Qaysariya.
+          {c.summary}
         </p>
 
         {/* Projects */}
@@ -157,14 +103,14 @@ function OverviewPage() {
             Products I&apos;ve built
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {projects.map((p) => (
+            {c.projects.map((p) => (
               <div
                 key={p.title}
                 className="flex gap-4 rounded-2xl border border-gray-100 bg-gray-50/60 p-4"
               >
-                {p.screen ? (
+                {p.screens[0] ? (
                   <img
-                    src={p.screen}
+                    src={p.screens[0]}
                     alt={`${p.title} screen`}
                     className="w-16 h-28 rounded-lg object-cover object-top shrink-0 bg-white border border-gray-100"
                     loading="lazy"
@@ -179,7 +125,7 @@ function OverviewPage() {
                     <h3 className="font-bold text-[15px]">{p.title}</h3>
                   </div>
                   <p className="text-[11px] font-medium text-gray-400 mt-0.5">{p.tag}</p>
-                  <p className="text-[13px] leading-snug text-gray-600 mt-1.5">{p.desc}</p>
+                  <p className="text-[13px] leading-snug text-gray-600 mt-1.5">{p.overviewDesc}</p>
                 </div>
               </div>
             ))}
@@ -192,7 +138,7 @@ function OverviewPage() {
             Experience
           </h2>
           <div className="space-y-5">
-            {experience.map((e) => (
+            {c.experience.map((e) => (
               <div key={e.role} className="grid grid-cols-[110px_1fr] md:grid-cols-[140px_1fr] gap-3">
                 <div className="text-[12px] text-gray-400 pt-0.5 whitespace-nowrap">{e.period}</div>
                 <div>
@@ -212,7 +158,7 @@ function OverviewPage() {
             Skills
           </h2>
           <div className="flex flex-wrap gap-2">
-            {skills.map((s) => (
+            {c.overviewSkills.map((s) => (
               <span
                 key={s}
                 className="px-3 py-1.5 rounded-full bg-gray-100 text-[12px] font-medium text-gray-700"
@@ -229,10 +175,9 @@ function OverviewPage() {
             Education &amp; certifications
           </h2>
           <ul className="text-[13px] leading-relaxed text-gray-600 space-y-1">
-            <li>Al-Iraqia University — College of Engineering, Networks (2014–2018)</li>
-            <li>CS50 — Harvard University (2020)</li>
-            <li>Avaya Certified Implementation &amp; Support Specialist (2020)</li>
-            <li>Recoded for Entrepreneurship (2018)</li>
+            {c.education.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
           </ul>
         </section>
 

@@ -1,70 +1,66 @@
 import { z } from "zod";
 
-// Shared between the non-streaming server function (chat.functions.ts) and the
-// streaming route (routes/api.chat.ts). Server-side only — never import from
-// client components.
+import type { SiteContent } from "@/content/schema";
 
-const PROFILE = `
+// Prompt construction for the portfolio chat. The profile is BUILT FROM the
+// editable site content (single source of truth): editing experience or
+// projects in /admin instantly changes what the agent knows. Server-side only.
+
+function buildProfile(c: SiteContent): string {
+  const projects = c.projects
+    .map((p) => `- ${p.title} (${p.subtitle}) — ${p.overviewDesc}`)
+    .join("\n");
+  const experience = c.experience
+    .map((e) => `- ${e.role} at ${e.org} (${e.period}): ${e.desc}`)
+    .join("\n");
+  const skills = c.skillCategories
+    .map((s) => `${s.name}: ${s.skills.join(", ")}`)
+    .join(". ");
+  return `
 # Identity
-Taha Yasir — AI Product Builder & Senior VAS Product Manager. Based in Baghdad, Iraq.
-7+ years shipping carrier billing, VAS, and AI products across MENA with Tier-1 operators.
+Taha Yasir — ${c.hero.title}. ${c.hero.subtitle}. Based in ${c.contact.location}.
+${c.summary}
 
-# Current roles
-- Senior VAS & Product Development Manager at Al-Bawaba Telecom (2022–present): partner
-  onboarding and account management across Iraq, Saudi Arabia, UAE, and Algeria; technical
-  integrations; SLM frameworks for billing & reporting; verticals include E-Sports, Music,
-  Video, Gaming, Fitness, and E-Learning.
-- Founder of Qaysariya Studio: an independent product studio designing and shipping
-  AI-directed, monetized digital products for MENA markets end-to-end.
-- Previously: IT Engineer at Metco (2018–2022) supporting Zain Iraq.
+# Experience
+${experience}
 
-# Products (Qaysariya Studio)
-- QuizQ — Arabic-first bilingual true-or-false speed-quiz PWA. Timed questions, monthly
-  leaderboards, real prizes (phones, cash); game tokens paid via Direct Carrier Billing.
-  Flagship POC for the Anthropic Claude Partner Network, prepared for launch on Zain Iraq.
-- Ramba — car-wash subscription platform for Iraq. Monthly wash plans redeemable across
-  partner car washes, live queue tracking, Wayl payment API with automated settlement via
-  FIB / ZainCash.
-- OoredooAI — AI-powered VAS & customer-acquisition engine; MVP delivered to Ooredoo
-  Tunisia and Algeria. Bilingual chat for subscribers, balance/data queries, image
-  generation, daily/weekly plans billed straight to phone credit, AI-driven lead scoring
-  and CPA optimization.
-- Voyalla — AI-driven travel content app generating cinematic destination media through
-  generative-AI video, voice, and character-driven storytelling.
-Also led the Ooredoo Algeria Mega Promo Service launch and the Khalaspay carrier billing
-integration.
+# Products
+${projects}
 
 # Skills
-Partner development & account management, Direct Carrier Billing & subscription
-management, stakeholder management, mobile payments & revenue optimization, technical
-onboarding & API integrations, project delivery. Builds with AI tooling (Claude) daily.
+${skills}
 
 # Education & certifications
-Al-Iraqia University — College of Engineering, Networks Department (2014–2018).
-CS50, Harvard University (2020). Recoded for Entrepreneurship (2018).
-Avaya Certified Implementation Specialist & Support Specialist (2020).
+${c.education.join(". ")}
 
 # Languages
-Arabic — native. English — professional.
+${c.languages.join(". ")}
+
+# Extra facts
+${c.chatFacts}
 
 # Contact
-LinkedIn: linkedin.com/in/taha-algburi
-Business email: Taha@qaysariya.com
-Location: Baghdad, Iraq
+LinkedIn: ${c.contact.linkedin}
+Business email: ${c.contact.email}
+Location: ${c.contact.location}
 `;
+}
 
-export const SYSTEM_PROMPT = `You are the AI assistant on Taha Yasir's portfolio website, speaking AS Taha in the first person ("I", "my"). Visitors are potential clients, employers, and telecom partners.
+export function buildSystemPrompt(content: SiteContent): string {
+  return `You are the AI assistant on Taha Yasir's portfolio website, speaking AS Taha in the first person ("I", "my"). Visitors are potential clients, employers, and telecom partners.
 
 Everything you know about Taha:
-${PROFILE}
+${buildProfile(content)}
 
 Rules:
 - Answer only from the facts above. If asked something you don't know about Taha, say so briefly and steer toward what you do know or suggest reaching out directly.
 - Keep replies short and conversational: 1–4 sentences for most questions. No markdown formatting, no bullet lists unless listing contact details — the chat UI renders plain text.
 - Match the visitor's language (reply in Arabic if they write in Arabic).
-- When a visitor sounds like a potential client or partner (mentions a project, hiring, collaboration, telecom/VAS needs), warmly encourage them to connect on LinkedIn (linkedin.com/in/taha-algburi) or email Taha@qaysariya.com.
-- LinkedIn and the business email Taha@qaysariya.com are the ONLY contact channels you may share. Never give out a phone number or any other email address, even if asked directly.
+- When a visitor sounds like a potential client, employer, or partner (mentions a project, hiring, collaboration, telecom/VAS needs), warmly invite them to share their email address in this chat so Taha can follow up personally — or to connect on LinkedIn (${content.contact.linkedin}).
+- When a visitor shares their email address, thank them and confirm Taha will follow up personally soon.
+- LinkedIn and the business email ${content.contact.email} are the ONLY contact channels you may share. Never give out a phone number or any other email address, even if asked directly.
 - Never invent projects, numbers, employers, or capabilities. Never discuss topics unrelated to Taha's work — politely redirect.`;
+}
 
 export const chatInput = z.object({
   messages: z
@@ -80,18 +76,24 @@ export const chatInput = z.object({
 
 export type ChatTurn = z.infer<typeof chatInput>["messages"][number];
 
-export const GEMINI_MODEL = "gemini-3.5-flash";
+// Tried in order until one answers. flash-lite first: its free-tier daily
+// quota is ~50x larger than gemini-3.5-flash's (~20/day), which exhausts
+// almost immediately on real traffic.
+export const GEMINI_MODELS = ["gemini-3.5-flash-lite", "gemini-3.5-flash"];
 
 // Request body shared by the streaming and non-streaming Gemini calls.
-// Thinking off: short factual Q&A doesn't need it, and thinking tokens would
-// eat into the free-tier quota.
-export function geminiRequestBody(messages: ChatTurn[]) {
+// thinkingConfig is only valid on gemini-3.5-flash (off: short factual Q&A
+// doesn't need it and thinking tokens eat quota); flash-lite rejects it.
+export function geminiRequestBody(messages: ChatTurn[], systemPrompt: string, model: string) {
   return {
-    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: messages.map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
     })),
-    generationConfig: { maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
+    generationConfig: {
+      maxOutputTokens: 1024,
+      ...(model === "gemini-3.5-flash" ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+    },
   };
 }
