@@ -4,6 +4,7 @@ import { getRequest } from "@tanstack/react-start/server";
 
 import {
   GEMINI_MODELS,
+  OFFTOPIC_MARKER,
   buildSystemPrompt,
   chatInput,
   geminiRequestBody,
@@ -74,8 +75,14 @@ export const askPortfolioChat = createServerFn({ method: "POST" })
 
     const systemPrompt = buildSystemPrompt(await getSiteContent());
     const question = data.messages[data.messages.length - 1]?.content ?? "";
-    const finish = (reply: string | null, provider: string) => {
-      if (reply) logChatExchange(question, reply, provider);
+    const finish = (rawReply: string | null, provider: string) => {
+      // Strip the model's hidden off-topic marker; it drives the log tag.
+      const offtopic = rawReply?.startsWith(OFFTOPIC_MARKER) ?? false;
+      const reply = offtopic
+        ? rawReply!.slice(OFFTOPIC_MARKER.length).replace(/^\s+/, "")
+        : rawReply;
+      if (reply)
+        logChatExchange(question, reply, provider, data.sessionId, offtopic ? "unanswered" : undefined);
       void captureChatLead(data.messages);
       return { reply };
     };

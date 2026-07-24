@@ -18,11 +18,17 @@ export const contactMessages = pgTable("contact_messages", {
 });
 
 // Every AI-chat exchange (anonymous — no IPs or identities stored).
+// sessionId groups exchanges into one visitor conversation; tag is a
+// rule-based importance signal computed at log time:
+//   lead — visitor shared an email · hiring — client/job intent detected ·
+//   unanswered — the AI couldn't answer (content gap) · general — the rest.
 export const chatLogs = pgTable("chat_logs", {
   id: serial("id").primaryKey(),
+  sessionId: varchar("session_id", { length: 40 }),
   question: text("question").notNull(),
   answer: text("answer").notNull(),
   provider: varchar("provider", { length: 20 }).notNull(),
+  tag: varchar("tag", { length: 20 }).notNull().default("general"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

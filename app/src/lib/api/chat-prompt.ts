@@ -59,8 +59,13 @@ Rules:
 - When a visitor sounds like a potential client, employer, or partner (mentions a project, hiring, collaboration, telecom/VAS needs), warmly invite them to share their email address in this chat so Taha can follow up personally — or to connect on LinkedIn (${content.contact.linkedin}).
 - When a visitor shares their email address, thank them and confirm Taha will follow up personally soon.
 - LinkedIn and the business email ${content.contact.email} are the ONLY contact channels you may share. Never give out a phone number or any other email address, even if asked directly.
-- Never invent projects, numbers, employers, or capabilities. Never discuss topics unrelated to Taha's work — politely redirect.`;
+- Never invent projects, numbers, employers, or capabilities. Never discuss topics unrelated to Taha's work — politely redirect.
+- If the question cannot be answered from the facts above, or is unrelated to Taha's work, start your reply with the exact marker [[offtopic]] followed by a space, then answer with your normal friendly redirect. The marker is stripped before the visitor sees it — never mention it.`;
 }
+
+// Hidden marker the model prepends to unanswerable/off-topic replies; the
+// server strips it from output and uses it to tag the log entry.
+export const OFFTOPIC_MARKER = "[[offtopic]]";
 
 export const chatInput = z.object({
   messages: z
@@ -72,6 +77,8 @@ export const chatInput = z.object({
     )
     .min(1)
     .max(30),
+  // Client-generated conversation id — groups exchanges in the admin Chats tab.
+  sessionId: z.string().min(1).max(40).optional(),
 });
 
 export type ChatTurn = z.infer<typeof chatInput>["messages"][number];

@@ -170,6 +170,13 @@ export function PortfolioApp({ content }: { content: SiteContent }) {
   // Conversation history sent to the Claude server function (multi-turn
   // context). Kept in a ref: it's request payload, not render state.
   const chatHistoryRef = useRef<{ role: "user" | "assistant"; content: string }[]>([]);
+  // Anonymous conversation id — lets the admin dashboard group a visitor's
+  // exchanges into one conversation. Regenerated when the chat is cleared.
+  const chatSessionRef = useRef<string>(
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   // Desktop = precise hovering pointer. On touch devices the fluid cursor has
   // nothing to follow and only burns GPU/memory. (Component is client-only.)
@@ -248,7 +255,7 @@ export function PortfolioApp({ content }: { content: SiteContent }) {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: history.slice(-20) }),
+        body: JSON.stringify({ messages: history.slice(-20), sessionId: chatSessionRef.current }),
       });
       if (!res.ok || !res.body) return null;
       const reader = res.body.getReader();
@@ -314,7 +321,9 @@ export function PortfolioApp({ content }: { content: SiteContent }) {
     }
     let answer: string;
     try {
-      const res = await askPortfolioChat({ data: { messages: history.slice(-20) } });
+      const res = await askPortfolioChat({
+        data: { messages: history.slice(-20), sessionId: chatSessionRef.current },
+      });
       answer = res.reply ?? findAnswer(content);
     } catch {
       answer = findAnswer(content);
@@ -332,6 +341,11 @@ export function PortfolioApp({ content }: { content: SiteContent }) {
     setShowChat(false);
     setMessages([]);
     chatHistoryRef.current = [];
+    // New conversation for the next chat.
+    chatSessionRef.current =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     setInput("");
     trackVirtualPage(v === "me" ? "/" : `/${v}`, v);
   };

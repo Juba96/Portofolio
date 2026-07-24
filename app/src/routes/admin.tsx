@@ -555,11 +555,91 @@ function LeadsTab({ onStatsChange }: { onStatsChange: (s: Stats) => void }) {
 
 // ---- Chats ---------------------------------------------------------------
 
+const TAG_META: Record<string, { label: string; cls: string }> = {
+  lead: { label: "Lead", cls: "bg-green-100 text-green-700" },
+  hiring: { label: "Client intent", cls: "bg-amber-100 text-amber-700" },
+  unanswered: { label: "Couldn't answer", cls: "bg-red-100 text-red-600" },
+};
+
+type Conversation = {
+  key: string;
+  exchanges: ChatLog[]; // chronological
+  latest: Date;
+  tags: Set<string>;
+};
+
+// Group exchanges into conversations by sessionId; legacy rows without one
+// are grouped by 30-minute proximity so old data still reads as threads.
+function groupConversations(logs: ChatLog[]): Conversation[] {
+  const bySession = new Map<string, ChatLog[]>();
+  const legacy: ChatLog[] = [];
+  for (const log of logs) {
+    if (log.sessionId) {
+      const list = bySession.get(log.sessionId) ?? [];
+      list.push(log);
+      bySession.set(log.sessionId, list);
+    } else {
+      legacy.push(log);
+    }
+  }
+  const groups: ChatLog[][] = [...bySession.values()];
+  legacy.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+  let current: ChatLog[] = [];
+  for (const log of legacy) {
+    const prev = current[current.length - 1];
+    if (prev && +new Date(log.createdAt) - +new Date(prev.createdAt) > 30 * 60 * 1000) {
+      groups.push(current);
+      current = [];
+    }
+    current.push(log);
+  }
+  if (current.length) groups.push(current);
+
+  return groups
+    .map((exchanges) => {
+      exchanges.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+      return {
+        key: exchanges[0].sessionId ?? `legacy-${exchanges[0].id}`,
+        exchanges,
+        latest: new Date(exchanges[exchanges.length - 1].createdAt),
+        tags: new Set(exchanges.map((e) => e.tag).filter((t) => t !== "general")),
+      };
+    })
+    .sort((a, b) => {
+      // Important conversations first, then most recent.
+      const score = (c: Conversation) =>
+        (c.tags.has("lead") ? 4 : 0) + (c.tags.has("hiring") ? 2 : 0) + (c.tags.has("unanswered") ? 1 : 0);
+      return score(b) - score(a) || +b.latest - +a.latest;
+    });
+}
+
+type ChatFilter = "important" | "unanswered" | "all";
+
 function ChatsTab() {
   const [logs, setLogs] = useState<ChatLog[] | null>(null);
+  const [filter, setFilter] = useState<ChatFilter>("important");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     adminListChatLogs().then(setLogs).catch(console.error);
   }, []);
+
+  const conversations = useMemo(() => (logs ? groupConversations(logs) : []), [logs]);
+
+  const counts = useMemo(
+    () => ({
+      important: conversations.filter((c) => c.tags.has("lead") || c.tags.has("hiring")).length,
+      unanswered: conversations.filter((c) => c.tags.has("unanswered")).length,
+      all: conversations.length,
+    }),
+    [conversations],
+  );
+
+  // Don't land the user on an empty "Important" view.
+  useEffect(() => {
+    if (logs && counts.important === 0 && filter === "important") setFilter("all");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logs]);
 
   if (!logs)
     return (
@@ -570,7 +650,7 @@ function ChatsTab() {
       </div>
     );
 
-  if (logs.length === 0)
+  if (conversations.length === 0)
     return (
       <div className={`${glassCard} p-10 text-center`}>
         <div className="text-3xl mb-2" aria-hidden>
@@ -578,40 +658,111 @@ function ChatsTab() {
         </div>
         <p className="text-sm font-semibold">No conversations yet</p>
         <p className="text-[12px] text-gray-500 mt-1 max-w-sm mx-auto">
-          Every question visitors ask the AI (and its answer) will appear here.
+          Visitor conversations with the AI will appear here, grouped and tagged by importance.
         </p>
       </div>
     );
 
+  const visible = conversations.filter((c) => {
+    if (filter === "important") return c.tags.has("lead") || c.tags.has("hiring");
+    if (filter === "unanswered") return c.tags.has("unanswered");
+    return true;
+  });
+
+  const FILTERS: { id: ChatFilter; label: string; count: number }[] = [
+    { id: "important", label: "Important", count: counts.important },
+    { id: "unanswered", label: "Couldn't answer", count: counts.unanswered },
+    { id: "all", label: "All", count: counts.all },
+  ];
+
   return (
-    <div className="space-y-3">
-      {logs.map((log, i) => (
-        <motion.div
-          key={log.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: Math.min(i, 6) * 0.04, ease: EASE }}
-          className={`${glassCard} p-4 md:p-5`}
-        >
-          <div className="flex items-center justify-between mb-3 text-[11px] text-gray-400">
-            <span className="px-2 py-0.5 rounded-full bg-gray-100 font-semibold text-gray-600 capitalize">
-              {log.provider}
+    <div>
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Conversation filters">
+        {FILTERS.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            aria-pressed={filter === f.id}
+            className={`h-9 px-3.5 rounded-full text-[12px] font-semibold inline-flex items-center gap-1.5 transition-all active:scale-[0.98] ${
+              filter === f.id ? "bg-black text-white" : "bg-gray-100 text-gray-600 hover:text-black"
+            }`}
+          >
+            {f.label}
+            <span
+              className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                filter === f.id ? "bg-white/20 text-white" : "bg-white text-gray-500"
+              }`}
+            >
+              {f.count}
             </span>
-            <span title={new Date(log.createdAt).toLocaleString()}>{timeAgo(log.createdAt)}</span>
-          </div>
-          {/* Mirrors the visitor chat: their question right/blue, answer left/gray */}
-          <div className="flex justify-end mb-2">
-            <p className="max-w-[85%] bg-blue-500 text-white text-[13px] leading-relaxed rounded-2xl rounded-br-md px-3.5 py-2 whitespace-pre-line">
-              {log.question}
-            </p>
-          </div>
-          <div className="flex justify-start">
-            <p className="max-w-[85%] bg-gray-100 text-gray-800 text-[13px] leading-relaxed rounded-2xl rounded-bl-md px-3.5 py-2 whitespace-pre-line">
-              {log.answer}
-            </p>
-          </div>
-        </motion.div>
-      ))}
+          </button>
+        ))}
+      </div>
+
+      {visible.length === 0 && (
+        <div className={`${glassCard} p-8 text-center`}>
+          <p className="text-sm font-semibold">Nothing here</p>
+          <p className="text-[12px] text-gray-500 mt-1">
+            No conversations match this filter yet — that's a good thing for "Couldn't answer".
+          </p>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {visible.map((c, i) => {
+          const isOpen = expanded.has(c.key) || c.exchanges.length <= 2;
+          const shown = isOpen ? c.exchanges : c.exchanges.slice(-1);
+          return (
+            <motion.div
+              key={c.key}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: Math.min(i, 6) * 0.04, ease: EASE }}
+              className={`${glassCard} p-4 md:p-5`}
+            >
+              {/* Conversation header */}
+              <div className="flex flex-wrap items-center gap-1.5 mb-3 text-[11px]">
+                {[...c.tags].map((t) => (
+                  <span key={t} className={`px-2 py-0.5 rounded-full font-semibold ${TAG_META[t]?.cls ?? ""}`}>
+                    {TAG_META[t]?.label ?? t}
+                  </span>
+                ))}
+                <span className="px-2 py-0.5 rounded-full bg-gray-100 font-semibold text-gray-600">
+                  {c.exchanges.length} {c.exchanges.length === 1 ? "exchange" : "exchanges"}
+                </span>
+                <span className="text-gray-400 ml-auto" title={c.latest.toLocaleString()}>
+                  {timeAgo(c.latest)}
+                </span>
+              </div>
+
+              {!isOpen && (
+                <button
+                  onClick={() => setExpanded((prev) => new Set(prev).add(c.key))}
+                  className="w-full mb-2 h-8 rounded-xl bg-gray-50 border border-black/5 text-[11px] font-medium text-gray-500 hover:text-black hover:border-black/15 transition-colors"
+                >
+                  Show {c.exchanges.length - 1} earlier {c.exchanges.length - 1 === 1 ? "exchange" : "exchanges"} ↑
+                </button>
+              )}
+
+              {shown.map((log) => (
+                <div key={log.id} className="mb-2 last:mb-0">
+                  <div className="flex justify-end mb-1.5">
+                    <p className="max-w-[85%] bg-blue-500 text-white text-[13px] leading-relaxed rounded-2xl rounded-br-md px-3.5 py-2 whitespace-pre-line">
+                      {log.question}
+                    </p>
+                  </div>
+                  <div className="flex justify-start">
+                    <p className="max-w-[85%] bg-gray-100 text-gray-800 text-[13px] leading-relaxed rounded-2xl rounded-bl-md px-3.5 py-2 whitespace-pre-line">
+                      {log.answer}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { GEMINI_MODELS, buildSystemPrompt, chatInput, geminiRequestBody } from "@/lib/api/chat-prompt";
+import {
+  GEMINI_MODELS,
+  OFFTOPIC_MARKER,
+  buildSystemPrompt,
+  chatInput,
+  geminiRequestBody,
+} from "@/lib/api/chat-prompt";
 import { captureChatLead, logChatExchange } from "@/lib/api/chat-intel.server";
 import { getSiteContent } from "@/lib/api/content.server";
 import { checkChatRequest } from "@/lib/api/rate-limit";
@@ -63,8 +69,37 @@ export const Route = createFileRoute("/api/chat")({
         // pull() near stream end, which left the response hanging — visitors
         // saw endless typing dots and post-processing never ran. The loop
         // always observes upstream EOF, closes the response, and then logs.
+        // The model prepends OFFTOPIC_MARKER to unanswerable replies; hold
+        // back the first few bytes until we can strip it so visitors never
+        // see it, then note the tag for logging.
+        let offtopic = false;
+        let markerDecided = false;
+        let head = "";
+
         const stream = new ReadableStream<Uint8Array>({
           start: async (controller) => {
+            const emit = (text: string) => {
+              if (markerDecided) {
+                fullAnswer += text;
+                controller.enqueue(encoder.encode(text));
+                return;
+              }
+              head += text;
+              if (head.length < OFFTOPIC_MARKER.length && head === OFFTOPIC_MARKER.slice(0, head.length)) {
+                return; // still could be the marker — keep holding
+              }
+              markerDecided = true;
+              if (head.startsWith(OFFTOPIC_MARKER)) {
+                offtopic = true;
+                head = head.slice(OFFTOPIC_MARKER.length).replace(/^\s+/, "");
+              }
+              if (head) {
+                fullAnswer += head;
+                controller.enqueue(encoder.encode(head));
+              }
+              head = "";
+            };
+
             try {
               for (;;) {
                 const { done, value } = await reader.read();
@@ -81,14 +116,16 @@ export const Route = createFileRoute("/api/chat")({
                     const text = (event.candidates?.[0]?.content?.parts ?? [])
                       .map((p) => p.text ?? "")
                       .join("");
-                    if (text) {
-                      fullAnswer += text;
-                      controller.enqueue(encoder.encode(text));
-                    }
+                    if (text) emit(text);
                   } catch {
                     // Partial/keep-alive line — skip.
                   }
                 }
+              }
+              // Flush any held prefix shorter than the marker.
+              if (!markerDecided && head) {
+                fullAnswer += head;
+                controller.enqueue(encoder.encode(head));
               }
             } finally {
               try {
@@ -98,7 +135,14 @@ export const Route = createFileRoute("/api/chat")({
               }
               // Post-processing after the reply finished — never blocks it.
               const question = messages[messages.length - 1]?.content ?? "";
-              if (fullAnswer.trim()) logChatExchange(question, fullAnswer, "gemini");
+              if (fullAnswer.trim())
+                logChatExchange(
+                  question,
+                  fullAnswer,
+                  "gemini",
+                  parsed.data.sessionId,
+                  offtopic ? "unanswered" : undefined,
+                );
               void captureChatLead(messages);
             }
           },
