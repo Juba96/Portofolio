@@ -53,6 +53,13 @@ export const siteContentSchema = z.object({
   }),
   // Extra free-form facts only the AI agent sees (metrics, FAQs, context).
   chatFacts: z.string(),
+  // CRM: automated thank-you email sent to new leads (needs RESEND_API_KEY).
+  crm: z.object({
+    autoReplyEnabled: z.boolean(),
+    autoReplySubject: z.string(),
+    // Plain text; {{name}} is replaced with the lead's name.
+    autoReplyBody: z.string(),
+  }),
 });
 
 export type SiteContent = z.infer<typeof siteContentSchema>;

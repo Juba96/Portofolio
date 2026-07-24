@@ -171,4 +171,10 @@ export const DEFAULT_CONTENT: SiteContent = {
   },
   chatFacts:
     "QuizQ is the flagship POC for the Anthropic Claude Partner Network. Ramba integrates the Wayl payment API with automated settlement via FIB / ZainCash. OoredooAI includes AI-driven lead scoring and CPA optimization. Also led the Ooredoo Algeria Mega Promo Service launch and the Khalaspay carrier billing integration.",
+  crm: {
+    autoReplyEnabled: true,
+    autoReplySubject: "Thanks for reaching out — Taha Yasir",
+    autoReplyBody:
+      "Hi {{name}},\n\nThanks for getting in touch through my portfolio — I've received your message and I'll get back to you personally within a day.\n\nIn the meantime, feel free to check my work at https://taha.qaysariya.com/overview or connect on LinkedIn: https://www.linkedin.com/in/taha-algburi/\n\nBest,\nTaha Yasir\nAI Product Builder · Qaysariya Studio",
+  },
 };

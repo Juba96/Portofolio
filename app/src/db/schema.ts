@@ -12,6 +12,8 @@ export const contactMessages = pgTable("contact_messages", {
   message: text("message").notNull(),
   status: varchar("status", { length: 20 }).notNull().default("new"),
   source: varchar("source", { length: 20 }).notNull().default("form"),
+  // Set when the automated thank-you email was sent (null = not sent).
+  autoRepliedAt: timestamp("auto_replied_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

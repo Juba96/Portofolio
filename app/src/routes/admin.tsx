@@ -235,6 +235,11 @@ function LeadsTab() {
               >
                 {l.source === "chat" ? "AI chat" : "Form"}
               </span>
+              {l.autoRepliedAt && (
+                <span className="px-2 py-0.5 rounded-full font-medium bg-green-100 text-green-700">
+                  auto-replied ✓
+                </span>
+              )}
               <span>{new Date(l.createdAt).toLocaleString()}</span>
             </div>
           </div>
@@ -664,6 +669,44 @@ function ContentTab() {
           value={content.chatFacts}
           onChange={(e) => set({ chatFacts: e.target.value })}
         />
+      </section>
+
+      {/* CRM auto-reply */}
+      <section className={glassCard}>
+        <h2 className="text-sm font-bold mb-1">Lead auto-reply email</h2>
+        <p className="text-[11px] text-gray-400 mb-3">
+          Sent once to every new lead (chat or form). Requires RESEND_API_KEY in Railway —
+          without it, nothing is sent regardless of this toggle. Use {"{{name}}"} for the
+          lead's name.
+        </p>
+        <label className="flex items-center gap-2 mb-3 text-sm font-medium cursor-pointer">
+          <input
+            type="checkbox"
+            checked={content.crm.autoReplyEnabled}
+            onChange={(e) => set({ crm: { ...content.crm, autoReplyEnabled: e.target.checked } })}
+            className="w-4 h-4 accent-black"
+          />
+          Auto-reply enabled
+        </label>
+        <div className="space-y-2.5">
+          <div>
+            <label className={labelCls}>Subject</label>
+            <input
+              className={fieldCls}
+              value={content.crm.autoReplySubject}
+              onChange={(e) => set({ crm: { ...content.crm, autoReplySubject: e.target.value } })}
+            />
+          </div>
+          <div>
+            <label className={labelCls}>Body (plain text)</label>
+            <textarea
+              className={`${fieldCls} resize-y`}
+              rows={7}
+              value={content.crm.autoReplyBody}
+              onChange={(e) => set({ crm: { ...content.crm, autoReplyBody: e.target.value } })}
+            />
+          </div>
+        </div>
       </section>
 
       {/* Save bar */}

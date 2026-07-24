@@ -2,6 +2,8 @@ import { and, eq, gt } from "drizzle-orm";
 
 import { db, schema } from "@/db";
 import type { ChatTurn } from "./chat-prompt";
+import { getSiteContent } from "./content.server";
+import { sendAutoReply } from "./email.server";
 
 // Post-processing for chat exchanges: transcript logging and in-chat lead
 // capture. Everything here is fire-and-forget — errors are logged and
@@ -47,12 +49,18 @@ export async function captureChatLead(messages: ChatTurn[]) {
       .map((m) => m.content)
       .join("\n");
 
-    await db().insert(schema.contactMessages).values({
-      name: "Chat visitor",
-      email,
-      message: context.slice(0, 4000),
-      source: "chat",
-    });
+    const [row] = await db()
+      .insert(schema.contactMessages)
+      .values({
+        name: "Chat visitor",
+        email,
+        message: context.slice(0, 4000),
+        source: "chat",
+      })
+      .returning({ id: schema.contactMessages.id });
+
+    // Automated thank-you (no-op without RESEND_API_KEY / when toggled off).
+    void sendAutoReply({ id: row.id, name: "Chat visitor", email }, await getSiteContent());
   } catch (error) {
     console.error("chat lead capture failed", error);
   }

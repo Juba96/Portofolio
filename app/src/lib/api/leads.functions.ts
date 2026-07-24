@@ -3,6 +3,8 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 import { db, schema } from "@/db";
+import { getSiteContent } from "./content.server";
+import { sendAutoReply } from "./email.server";
 import { checkChatRequest } from "./rate-limit";
 
 // Public contact-form submission → a lead in contact_messages (source 'form').
@@ -18,6 +20,12 @@ export const submitLead = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     if (checkChatRequest(getRequest())) return { ok: false };
-    await db().insert(schema.contactMessages).values({ ...data, source: "form" });
+    const [row] = await db()
+      .insert(schema.contactMessages)
+      .values({ ...data, source: "form" })
+      .returning({ id: schema.contactMessages.id });
+
+    // Automated thank-you (no-op without RESEND_API_KEY / when toggled off).
+    void sendAutoReply({ id: row.id, name: data.name, email: data.email }, await getSiteContent());
     return { ok: true };
   });
