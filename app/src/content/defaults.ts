@@ -11,6 +11,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     subtitle:
       "Senior VAS & Product Development Manager · 7+ years in telecom across MENA",
   },
+  avatarUrl: "/assets/avatar.png",
   summary:
     "7+ years shipping carrier billing, VAS, and AI products across MENA with Tier-1 operators (Ooredoo, Zain, Khalaspay). I manage partner ecosystems and technical integrations by day, and design, build, and launch AI products end-to-end through my studio, Qaysariya.",
   projects: [

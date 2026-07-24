@@ -6,6 +6,7 @@ import { db, schema } from "@/db";
 import { siteContentSchema } from "@/content/schema";
 import { requireAdmin } from "./admin-auth.functions";
 import { getSiteContent, invalidateContentCache } from "./content.server";
+import { r2Configured, uploadToR2 } from "./storage.server";
 
 // Everything the /admin dashboard reads and writes. Every handler starts with
 // requireAdmin() — no session cookie, no data.
@@ -92,6 +93,43 @@ export const adminSaveContent = createServerFn({ method: "POST" })
       });
     invalidateContentCache();
     return { ok: true };
+  });
+
+// Whether image uploads are available (R2 env vars present).
+export const adminStorageStatus = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
+  return { configured: r2Configured() };
+});
+
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"] as const;
+
+export const adminUploadImage = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      filename: z.string().min(1).max(200),
+      contentType: z.enum(IMAGE_TYPES),
+      // ~4MB binary as base64 (~5.4M chars).
+      dataBase64: z.string().min(1).max(5_600_000),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    if (!r2Configured()) return { url: null, error: "R2 is not configured yet" };
+    try {
+      const bytes = Uint8Array.from(atob(data.dataBase64), (c) => c.charCodeAt(0));
+      const ext = data.contentType.split("/")[1].replace("jpeg", "jpg");
+      const slug = data.filename
+        .toLowerCase()
+        .replace(/\.[a-z0-9]+$/, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .slice(0, 40);
+      const key = `uploads/${Date.now()}-${slug || "image"}.${ext}`;
+      const url = await uploadToR2(key, bytes, data.contentType);
+      return { url, error: null };
+    } catch (error) {
+      console.error("image upload failed", error);
+      return { url: null, error: "Upload failed — check the R2 credentials" };
+    }
   });
 
 export const adminListRevisions = createServerFn({ method: "GET" }).handler(async () => {

@@ -383,7 +383,7 @@ export function PortfolioApp({ content }: { content: SiteContent }) {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-2xl m-auto py-3 md:py-0"
             >
-              {view === "me" && <MeView hero={content.hero} />}
+              {view === "me" && <MeView hero={content.hero} avatarUrl={content.avatarUrl} />}
               {view === "projects" && <ProjectsView projects={content.projects.filter((p) => p.screens.length > 0)} />}
               {view === "skills" && <SkillsView skillCategories={content.skillCategories} languages={content.languages} />}
               {view === "fun" && <FunView funItems={content.funItems} />}
@@ -541,7 +541,7 @@ export function PortfolioApp({ content }: { content: SiteContent }) {
 
 /* ---------- Views ---------- */
 
-function MeView({ hero }: { hero: SiteContent["hero"] }) {
+function MeView({ hero, avatarUrl }: { hero: SiteContent["hero"]; avatarUrl: string }) {
   // Preserve the bold name styling when the greeting contains "Taha".
   const [greetPre, greetPost] = hero.greeting.includes("Taha")
     ? hero.greeting.split(/Taha(.*)/s)
@@ -608,7 +608,7 @@ function MeView({ hero }: { hero: SiteContent["hero"] }) {
       >
         <div className="w-44 h-44 sm:w-48 sm:h-48 md:w-52 md:h-52 mx-auto">
           <img
-            src="/assets/avatar.png"
+            src={avatarUrl}
             alt="Taha Yasir"
             width={416}
             height={416}

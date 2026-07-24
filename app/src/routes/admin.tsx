@@ -13,6 +13,8 @@ import {
   adminSaveContent,
   adminSetLeadStatus,
   adminStats,
+  adminStorageStatus,
+  adminUploadImage,
 } from "@/lib/api/admin.functions";
 
 // Private dashboard: funnel stats, leads + follow-up status, AI-chat
@@ -614,6 +616,84 @@ function ChatsTab() {
   );
 }
 
+// ---- Image upload --------------------------------------------------------
+
+// File picker → base64 → adminUploadImage (R2). Disabled with a hint when R2
+// env vars aren't configured yet.
+function UploadButton({
+  storageReady,
+  onUploaded,
+  label = "Upload image",
+}: {
+  storageReady: boolean;
+  onUploaded: (url: string) => void;
+  label?: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const pick = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/png,image/jpeg,image/webp,image/gif";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      if (file.size > 4 * 1024 * 1024) {
+        setError("Max 4MB per image");
+        return;
+      }
+      setBusy(true);
+      setError(null);
+      try {
+        const buf = new Uint8Array(await file.arrayBuffer());
+        let binary = "";
+        const chunk = 0x8000;
+        for (let i = 0; i < buf.length; i += chunk) {
+          binary += String.fromCharCode(...buf.subarray(i, i + chunk));
+        }
+        const res = await adminUploadImage({
+          data: {
+            filename: file.name,
+            contentType: file.type as "image/png" | "image/jpeg" | "image/webp" | "image/gif",
+            dataBase64: btoa(binary),
+          },
+        });
+        if (res.url) onUploaded(res.url);
+        else setError(res.error ?? "Upload failed");
+      } catch {
+        setError("Upload failed");
+      } finally {
+        setBusy(false);
+      }
+    };
+    input.click();
+  };
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <button
+        type="button"
+        onClick={pick}
+        disabled={!storageReady || busy}
+        title={storageReady ? undefined : "Set the R2 variables in Railway to enable uploads"}
+        className="h-9 px-4 rounded-full border border-dashed border-black/20 text-[12px] font-medium text-gray-600 hover:border-black/40 hover:text-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5" aria-hidden>
+          <path d="M12 16V4M7 9l5-5 5 5" />
+          <path d="M4 20h16" />
+        </svg>
+        {busy ? "Uploading…" : label}
+      </button>
+      {error && (
+        <span className="text-[11px] text-red-600" role="alert">
+          {error}
+        </span>
+      )}
+    </span>
+  );
+}
+
 // ---- Content -------------------------------------------------------------
 
 function SectionCard({
@@ -640,6 +720,7 @@ function ContentTab() {
   const [savedSnapshot, setSavedSnapshot] = useState<string>("");
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [storageReady, setStorageReady] = useState(false);
 
   const load = () => {
     adminGetContent()
@@ -649,6 +730,9 @@ function ContentTab() {
       })
       .catch(console.error);
     adminListRevisions().then(setRevisions).catch(console.error);
+    adminStorageStatus()
+      .then((s) => setStorageReady(s.configured))
+      .catch(() => setStorageReady(false));
   };
   useEffect(load, []);
 
@@ -699,6 +783,21 @@ function ContentTab() {
   return (
     <div className="space-y-4">
       <SectionCard title="Hero" hint="The landing headline visitors see first.">
+        <div className="flex items-center gap-4 mb-4 p-3 rounded-xl border border-black/5 bg-gray-50/50">
+          <img
+            src={content.avatarUrl}
+            alt="Current avatar"
+            className="w-16 h-16 rounded-xl object-contain bg-white border border-black/5"
+          />
+          <div>
+            <p className="text-[12px] font-semibold text-gray-700 mb-1.5">Portrait / avatar</p>
+            <UploadButton
+              storageReady={storageReady}
+              label="Replace avatar"
+              onUploaded={(url) => set({ avatarUrl: url })}
+            />
+          </div>
+        </div>
         <div className="space-y-3">
           <div>
             <label className={labelCls}>Greeting</label>
@@ -899,8 +998,74 @@ function ContentTab() {
                   }}
                 />
               </div>
+              {/* App screens shown inside the iPhone frame (first = cover). */}
+              <div>
+                <label className={labelCls}>Screens ({p.screens.length})</label>
+                <div className="flex flex-wrap items-start gap-2">
+                  {p.screens.map((src, si) => (
+                    <div key={`${src}-${si}`} className="relative group">
+                      <img
+                        src={src}
+                        alt={`${p.title} screen ${si + 1}`}
+                        className="w-14 h-24 rounded-lg object-cover object-top bg-white border border-black/10"
+                      />
+                      {si === 0 && (
+                        <span className="absolute -top-1.5 -left-1.5 px-1.5 py-0.5 rounded-full bg-black text-white text-[9px] font-bold">
+                          cover
+                        </span>
+                      )}
+                      <div className="absolute inset-x-0 -bottom-1.5 flex justify-center gap-1">
+                        {si > 0 && (
+                          <button
+                            type="button"
+                            aria-label="Move image earlier"
+                            onClick={() => {
+                              const screens = [...p.screens];
+                              [screens[si - 1], screens[si]] = [screens[si], screens[si - 1]];
+                              const projects = [...content.projects];
+                              projects[i] = { ...p, screens };
+                              set({ projects });
+                            }}
+                            className="w-6 h-6 rounded-full bg-white border border-black/10 shadow-sm flex items-center justify-center text-gray-600 hover:text-black text-[11px]"
+                          >
+                            ←
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          aria-label="Remove image"
+                          onClick={() => {
+                            if (!window.confirm("Remove this screen?")) return;
+                            const projects = [...content.projects];
+                            projects[i] = { ...p, screens: p.screens.filter((_, j) => j !== si) };
+                            set({ projects });
+                          }}
+                          className="w-6 h-6 rounded-full bg-white border border-black/10 shadow-sm flex items-center justify-center text-red-500 hover:text-red-700 text-[11px]"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <UploadButton
+                    storageReady={storageReady}
+                    label="Add screen"
+                    onUploaded={(url) => {
+                      const projects = [...content.projects];
+                      projects[i] = { ...p, screens: [...p.screens, url] };
+                      set({ projects });
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           ))}
+          {!storageReady && (
+            <p className="text-[11px] text-gray-400">
+              Image uploads need Cloudflare R2 — set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID,
+              R2_SECRET_ACCESS_KEY, R2_BUCKET and R2_PUBLIC_URL in Railway to enable.
+            </p>
+          )}
         </div>
       </SectionCard>
 

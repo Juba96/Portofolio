@@ -23,6 +23,9 @@ export const siteContentSchema = z.object({
     title: z.string(),
     subtitle: z.string(),
   }),
+  // Hero/overview portrait. Default ships in /public; replaceable from /admin
+  // with an uploaded R2 URL.
+  avatarUrl: z.string(),
   summary: z.string(), // paragraph on /overview + AI identity line
   projects: z.array(projectSchema),
   experience: z.array(

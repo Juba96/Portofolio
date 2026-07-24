@@ -41,7 +41,7 @@ function OverviewPage() {
         {/* Header */}
         <header className="flex items-center gap-5">
           <img
-            src="/assets/avatar.png"
+            src={c.avatarUrl}
             alt="Taha Yasir"
             className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover bg-gray-100"
           />
